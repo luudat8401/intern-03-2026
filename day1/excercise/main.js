@@ -1,6 +1,6 @@
-import User from "./user.class.js";
-import Master from "./master.class.js";
-import MasterManage from "./manageMaster.class.js";
+import User from "./models/user.class.js";
+import Master from "./models/master.class.js";
+import MasterManage from "./models/manageMaster.class.js";
 
 const u1 = new User("Dat", 23, "student", "101");
 const u2 = new User("Minh", 23, "worker", "102");
