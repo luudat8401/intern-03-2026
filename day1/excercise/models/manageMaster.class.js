@@ -13,5 +13,12 @@ class MasterManage{
             console.log("-----------------");
         }
     }
+    showRentMoneyUserLeave(user,master){
+        user.updateRentStatus();
+        console.log("Phong tro co nguoi roi di khi chua het thang");
+        console.log("User: " + user.name);
+        console.log("Rent money: " + user.getRentFee());
+        master.kickUser(user);
+    }    
 }
 export default MasterManage;

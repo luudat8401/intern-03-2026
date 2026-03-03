@@ -6,6 +6,9 @@ class Master{
     addUser(user){
         this.users.push(user);
     }
+    kickUser(){
+        this.users = this.users.filter(user => user.rent != "no");
+    }
     calculateRentMoney(){
         let total = 0;
         for(const i of this.users){
