@@ -1,1 +1,0 @@
-console.log('xin chào đến với bài học 30 ngày code javascript')
