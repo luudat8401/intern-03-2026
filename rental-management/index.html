@@ -6,102 +6,60 @@
     <title>Quản lý cho thuê trọ</title>
 </head>
 <body>
-<div class="app">
-    <div class="sidebar">
-        <div class="menu">
-            <button class="menu-item" data-section="dashboard">Tổng quan</button>
-            <button class="menu-item" data-section="tenants">Người thuê</button>
-            <button class="menu-item" data-section="rentals">Thuê trọ</button>
-            <button class="menu-item" data-section="revenue">Doanh thu tháng</button>
-            <button class="menu-item" data-section="rooms">Phòng</button>
-            <button class="menu-item" data-section="landlords">Chủ trọ</button>
-        </div>
-    </div>
-    <div class="main">
-        <!-- dashboard / doanh thu -->
-        <div id="dashboard" class="content-section active">
-            <div class="card">
-                <h2>Doanh thu tháng này</h2>
+    <div class="app">
+        <div class="sidebar">
+            <div class="menu">
+                <button class="menu-item" data-section="dashboard">Tổng quan</button>
+                <button class="menu-item" data-section="tenants">Người thuê</button>
+                <button class="menu-item" data-section="rentals">Thuê trọ</button>
+                <button class="menu-item" data-section="rooms">Phòng</button>
+                <button class="menu-item" data-section="landlords">Chủ trọ</button>
             </div>
         </div>
 
-        <!-- xem/thêm người thuê, xóa, tính tiền rời giữa tháng -->
-        <div id="tenants" class="content-section">
-            <div class="card">
-                <h2>Danh sách người thuê</h2>
-                <table><!-- bảng thông tin thuê trọ --></table>
-                <button>Thêm người thuê</button>
+        <div class="main">
+            <div id="dashboard" class="content-section active">
+                <div class="card">
+                    <h2>Doanh thu tháng này</h2>
+                </div>
             </div>
-            <div class="card">
-                <h3>Tính tiền rời giữa tháng</h3>
-                <!-- form nhập ngày đi, số ngày, tính -->
-            </div>
-        </div>
 
-        <!-- xem thông tin thuê trọ -->
-        <div id="rentals" class="content-section">
-            <div class="card">
-                <h2>Thông tin hợp đồng thuê</h2>
-                <table><!-- hiển thị các hợp đồng --></table>
+            <div id="tenants" class="content-section">
+                <div class="card">
+                    <h2>Danh sách người thuê</h2>
+                    <table></table>
+                    <button>Thêm người thuê</button>
+                </div>
+                <div class="card">
+                    <h3>Tính tiền rời giữa tháng</h3>
+                </div>
             </div>
-        </div>
-
-        <!-- thêm/xem phòng, phòng trống theo chủ, phòng doanh thu cao nhất -->
-        <div id="rooms" class="content-section">
-            <div class="card">
-                <h2>Quản lý phòng</h2>
-                <button>Thêm phòng</button>
-                <button>Xem phòng trống theo chủ trọ</button>
-                <button>Xem phòng doanh thu cao nhất theo chủ trọ</button>
+            <div id="rentals" class="content-section">
+                <div class="card">
+                    <h2>Thông tin hợp đồng thuê</h2>
+                    <table></table>
+                </div>
             </div>
-        </div>
-
-        <!-- thêm chủ trọ -->
-        <div id="landlords" class="content-section">
-            <div class="card">
-                <h2>Chủ trọ</h2>
-                <button>Thêm chủ trọ</button>
-                <table><!-- danh sách chủ trọ --></table>
+            <div id="rooms" class="content-section">
+                <div class="card">
+                    <h2>Quản lý phòng</h2>
+                    <button>Thêm phòng</button>
+                    <button>Xem phòng trống theo chủ trọ</button>
+                    <button>Xem phòng doanh thu cao nhất theo chủ trọ</button>
+                </div>
+            </div>
+            <div id="landlords" class="content-section">
+                <div class="card">
+                    <h2>Chủ trọ</h2>
+                    <input class="owner-new" id="owner-name-text" type="text" placeholder="Tìm kiếm chủ trọ">
+                    <button class="owner-new" id="owner-new-button">Thêm chủ trọ</button>
+                    <table></table>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-const menuButtons = document.querySelectorAll('.menu-item');
-console.log('Tất cả nút menu:', menuButtons);
-
-menuButtons.forEach((btn, index) => {
-    console.log(`Xử lý nút ${index + 1}:`, btn.textContent);
-    btn.onclick = () => {
-        console.log('--- Click vào:', btn.textContent, '---');
-        console.log('data-section:', btn.dataset.section);
-        
-        const allButtons = document.querySelectorAll('.menu-item');
-        allButtons.forEach(b => {
-            console.log(`Xóa active khỏi:`, b.textContent);
-            b.classList.remove('active');
-        });
-        
-        const allSections = document.querySelectorAll('.content-section');
-        allSections.forEach(s => {
-            console.log(`Ẩn section:`, s.id);
-            s.classList.remove('active');
-        });
-        
-        btn.classList.add('active');
-        console.log(`Thêm active vào nút: ${btn.textContent}`);
-        
-        const targetSection = document.getElementById(btn.dataset.section);
-        if (targetSection) {
-            targetSection.classList.add('active');
-            console.log(`Hiển thị section: ${btn.dataset.section}`);
-        } else {
-            console.warn(`Không tìm thấy section với id: ${btn.dataset.section}`);
-        }
-    };
-});
-console.log('=== Trang đã tải xong ===');
-</script>
+    <script type="module" src ="js/main.js">
+    </script>
 </body>
 </html>
