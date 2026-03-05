@@ -42,4 +42,4 @@ function TinhTong(total,value){
 console.log(tong);
 
 
-//js error
+//js asyn

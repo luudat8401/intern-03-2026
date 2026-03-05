@@ -6,7 +6,7 @@ export const load = (key) => {
     try{
         const data = localStorage.getItem(key);
         if (!data){
-            return [];
+            throw new Error("Không tìm thấy dữ liệu với key: " + key);
         } 
         const checkValid = JSON.parse(data);
         const valid = checkValid.filter(item => item.name && item.name.trim() !== "");

@@ -38,73 +38,9 @@
 // master1.showAvailableRooms();
 "use strict";
 
-import User from "./models/user.class.js";
-import Master from "./models/master.class.js";
-import MasterManage from "./models/manageMaster.class.js";
-import Room from "./models/room.class.js";
-import { save, load } from "./service/storage.service.js";
+import { initMenu } from "./ui/menu.ui.js";
+import { initOwnerUI } from "./ui/master.ui.js";
 
-const menuButtons = document.querySelectorAll('.menu-item');
-const allSections = document.querySelectorAll('.content-section');
-
-menuButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-
-        menuButtons.forEach(b => b.classList.remove('active'));
-        allSections.forEach(section => 
-            section.classList.remove('active')
-        );
-
-        btn.classList.add('active');
-
-        const targetSection = document.getElementById(btn.dataset.section);
-        if (targetSection) {
-            targetSection.classList.add('active');
-        }
-    });
-});
-
-const ownerInput = document.getElementById("owner-name-text");
-const addOwnerBtn = document.getElementById("owner-new-button");
-const ownerTable = document.querySelector("#landlords table");
-
-let masters = load("masters"); // local
-renderOwners();
-function renderOwners() {
-    ownerTable.innerHTML = `
-        <tr>
-            <th>STT</th>
-            <th>Tên chủ trọ</th>
-        </tr>
-    `;
-    masters.forEach((master, index) => {
-        ownerTable.innerHTML += `
-            <tr>
-                <td>${index + 1}</td>
-                <td>${master.name}</td>
-            </tr>
-        `;
-    });
-}
-
-addOwnerBtn.addEventListener("click", () => {
-    const name = ownerInput.value.trim();
-    if (!name) {
-        alert("Vui lòng nhập tên chủ trọ");
-        return;
-    }
-    const newMaster = new Master(name);
-    masters.push(newMaster);
-    renderOwners();   
-    save("masters", masters); // local
-    ownerInput.value = ""; 
-});
-
-ownerInput.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-        addOwnerBtn.click(); 
-    }
-});
-
-
-
+    initMenu();
+    initOwnerUI();
+    
