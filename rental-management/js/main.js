@@ -42,6 +42,7 @@ import User from "./models/user.class.js";
 import Master from "./models/master.class.js";
 import MasterManage from "./models/manageMaster.class.js";
 import Room from "./models/room.class.js";
+import { save, load } from "./service/storage.service.js";
 
 const menuButtons = document.querySelectorAll('.menu-item');
 const allSections = document.querySelectorAll('.content-section');
@@ -67,8 +68,8 @@ const ownerInput = document.getElementById("owner-name-text");
 const addOwnerBtn = document.getElementById("owner-new-button");
 const ownerTable = document.querySelector("#landlords table");
 
-let masters = [];
-
+let masters = load("masters"); // local
+renderOwners();
 function renderOwners() {
     ownerTable.innerHTML = `
         <tr>
@@ -95,6 +96,7 @@ addOwnerBtn.addEventListener("click", () => {
     const newMaster = new Master(name);
     masters.push(newMaster);
     renderOwners();   
+    save("masters", masters); // local
     ownerInput.value = ""; 
 });
 
@@ -103,3 +105,6 @@ ownerInput.addEventListener("keydown", (event) => {
         addOwnerBtn.click(); 
     }
 });
+
+
+
