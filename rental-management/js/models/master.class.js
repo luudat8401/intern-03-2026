@@ -10,7 +10,7 @@ class Master{
         user.updateRentStatus();
     }
     addRoom(room){
-        this.rooms.push(room);
+        this.rooms.push(room);  
     }
     calculateRentMoney(){
         let total = 0;

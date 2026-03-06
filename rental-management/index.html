@@ -43,9 +43,13 @@
             <div id="rooms" class="content-section">
                 <div class="card">
                     <h2>Quản lý phòng</h2>
-                    <button>Thêm phòng</button>
-                    <button>Xem phòng trống theo chủ trọ</button>
-                    <button>Xem phòng doanh thu cao nhất theo chủ trọ</button>
+                    <button  id ="add-room" class="room">Thêm phòng</button>
+                    <input id ="input-room-name" class ="room" type ="text" placeholder="Nhập tên phòng">
+                    <input id = "input-room-price" class ="room" type ="text" placeholder="Nhập giá phòng">
+                    <select id="select-owner" class="room">
+                        <option value="" disabled selected>Chọn chủ phòng</option>
+                    </select>
+                    <table></table>
                 </div>
             </div>
             <div id="landlords" class="content-section">

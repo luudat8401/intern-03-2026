@@ -40,7 +40,8 @@
 
 import { initMenu } from "./ui/menu.ui.js";
 import { initOwnerUI } from "./ui/master.ui.js";
-
+import { initRoomUI } from "./ui/room.ui.js";
     initMenu();
     initOwnerUI();
+    initRoomUI();
     

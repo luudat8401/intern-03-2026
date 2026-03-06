@@ -29,3 +29,11 @@ try {
 
 //debug 
 console.error("Something went wrong!");
+
+try {
+  let x = y+11;
+}catch(error){
+  console.log("co loi say ra" +error)
+}finally {
+  console.log("khoong co gi ")
+}
