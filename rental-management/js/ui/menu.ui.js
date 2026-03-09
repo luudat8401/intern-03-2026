@@ -16,6 +16,11 @@ export function initMenu() {
             if (targetSection) {
                 targetSection.classList.add('active');
             }
+
+            if (btn.dataset.section === "rooms") {
+                document.dispatchEvent(new Event("openRooms"));
+            }
+
         });
     });
 }

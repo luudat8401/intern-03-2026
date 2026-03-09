@@ -101,3 +101,60 @@
 #room-table th{
     background:#f3f4f6;
 }
+/* ===== Owner Section ===== */
+
+#landlords h2{
+    margin-bottom:15px;
+    color:#1e293b;
+}
+
+.owner-new{
+    padding:8px 12px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    margin-right:8px;
+}
+
+#owner-name-text{
+    width:220px;
+}
+
+#owner-new-button{
+    background:#10b981;
+    color:white;
+    border:none;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+#owner-new-button:hover{
+    background:#059669;
+}
+
+/* ===== Owner Table ===== */
+
+#landlords table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+#landlords th,
+#landlords td{
+    border:1px solid #e5e7eb;
+    padding:10px;
+    text-align:center;
+}
+
+#landlords th{
+    background:#f3f4f6;
+    font-weight:bold;
+}
+
+#landlords tr:nth-child(even){
+    background:#f9fafb;
+}
+
+#landlords tr:hover{
+    background:#e2e8f0;
+}

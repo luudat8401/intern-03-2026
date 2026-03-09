@@ -111,3 +111,4 @@ const movies_hay = movies.map(movie => {
 })
 console.log(movies_hay)
 
+console.log(0.1 + 0.2 === 0.3)
