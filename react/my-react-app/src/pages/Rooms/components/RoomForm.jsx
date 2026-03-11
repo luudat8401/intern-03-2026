@@ -28,21 +28,18 @@ export default function RoomForm({ addRoom }) {
     return (
 
         <form className="room-form" onSubmit={handleSubmit}>
-
             <input
                 placeholder="Tên phòng"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
             />
-
             <input
                 placeholder="Giá phòng"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 required
             />
-
             <input
                 placeholder="Chủ trọ"
                 value={owner}

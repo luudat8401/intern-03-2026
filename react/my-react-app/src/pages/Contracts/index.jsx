@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ContractStats from "./components/ContractStats";
 import ContractForm from "./components/ContractForm";
 import ContractTable from "./components/ContractTable";
 import "./contracts.css"
 
 export default function Contracts(){
-    const [contracts, setContracts] = useState([]);
+
+    const [contracts, setContracts] = useState(() => {
+        const saved = localStorage.getItem("contracts");
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    useEffect(() => {
+        localStorage.setItem("contracts", JSON.stringify(contracts));
+    }, [contracts]);
 
     const addContract = (contract) => {
         setContracts([...contracts, contract]);

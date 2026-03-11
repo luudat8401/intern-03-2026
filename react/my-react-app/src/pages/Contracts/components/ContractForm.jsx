@@ -1,77 +1,85 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function ContractForm({ addContract }) {
+  const [formData, setFormData] = useState({
+    user: "",
+    room: "",
+    price: "",
+    startDate: "",
+    endDate: ""
+  });
+  const count = useRef(0);
 
-    const [user, setUser] = useState("");
-    const [room, setRoom] = useState("");
-    const [price, setPrice] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
+  const handleChange = (a) => {
+    const { name, value } = a.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    count.current ++;
+    console.log(count.current)
+  };
 
-    const handleSubmit = (e) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-        e.preventDefault();
-
-        const newContract = {
-            id: Date.now(),
-            user,
-            room,
-            price,
-            startDate,
-            endDate,
-            status: "active"
-        };
-
-        addContract(newContract);
-
-        setUser("");
-        setRoom("");
-        setPrice("");
-        setStartDate("");
-        setEndDate("");
+    const newContract = {
+      id: Date.now(),
+      ...formData,
+      status: "active"
     };
+    addContract(newContract);
 
-    return (
+    // reset form
+    setFormData({
+      user: "",
+      room: "",
+      price: "",
+      startDate: "",
+      endDate: ""
+    });
+  };
 
-        <form className="contract-form" onSubmit={handleSubmit}>
+  return (
+    <form className="contract-form" onSubmit={handleSubmit}>
+      <input
+        name="user"
+        placeholder="Người thuê"
+        value={formData.user}
+        onChange={handleChange}
+        required
+      />
 
-            <input
-                placeholder="Người thuê"
-                value={user}
-                onChange={(e) => setUser(e.target.value)}
-                required
-            />
+      <input
+        name="room"
+        placeholder="Phòng"
+        value={formData.room}
+        onChange={handleChange}
+        required
+      />
 
-            <input
-                placeholder="Phòng"
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                required
-            />
+      <input
+        name="price"
+        placeholder="Giá thuê"
+        value={formData.price}
+        onChange={handleChange}
+        required
+      />
 
-            <input
-                placeholder="Giá thuê"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-            />
+      <input
+        type="date"
+        name="startDate"
+        value={formData.startDate}
+        onChange={handleChange}
+        required
+      />
 
-            <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-            />
+      <input
+        type="date"
+        name="endDate"
+        value={formData.endDate}
+        onChange={handleChange}
+        required
+      />
 
-            <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-            />
-
-            <button type="submit">Tạo hợp đồng</button>
-
-        </form>
-    );
+      <button type="submit">Tạo hợp đồng</button>
+    </form>
+  );
 }
