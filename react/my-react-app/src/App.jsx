@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import { Dashboard, Masters, Rooms, Users, Contracts,Login,Register } from "./pages";
+import { Dashboard, Masters, Rooms, Users, Contracts,Login } from "./pages";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./styles/layout.css";
 
