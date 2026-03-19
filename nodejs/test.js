@@ -39,10 +39,6 @@ const server = http.createServer(async (req, res) => {
   const path = parsedUrl.pathname;
   const method = req.method;
   try {
-    // if (method === "GET" && path === "/users") {
-    //   const data = await readData();
-    //   return send(res, 200, data);
-    // }
     if (method === "GET" && path.startsWith("/users/")) {
       const id = path.split("/")[2];
       const data = await readData();
