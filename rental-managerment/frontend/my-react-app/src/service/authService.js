@@ -1,17 +1,17 @@
-export async function login(username, password) {
+import axiosClient from "../api/axiosClient";
 
-  const response = await fetch("https://dummyjson.com/auth/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      username,
-      password
-    })
+export async function login(username, password) {
+  const response = await axiosClient.post("/auth/login", {
+    username,
+    password
   });
-  if (!response.ok) {
-    throw new Error("Login failed");
-  }
-  return response.json();
+  return response.data;
+}
+export async function register(username, password, role) {
+  const response = await axiosClient.post("/auth/register", {
+    username,
+    password,
+    role
+  });
+  return response.data;
 }

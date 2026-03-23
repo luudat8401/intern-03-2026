@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export default function MasterForm({ addMaster, editingMaster, updateMaster, cancelEdit }) {
 
@@ -7,6 +7,7 @@ export default function MasterForm({ addMaster, editingMaster, updateMaster, can
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
 
+  const nameInputRef = useRef(null);
   useEffect(() => {
     if (editingMaster) {
       setName(editingMaster.name);
@@ -18,6 +19,9 @@ export default function MasterForm({ addMaster, editingMaster, updateMaster, can
       setPhone("");
       setEmail("");
       setAddress("");
+    }
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
     }
   }, [editingMaster]);
 
@@ -45,6 +49,7 @@ export default function MasterForm({ addMaster, editingMaster, updateMaster, can
     <form onSubmit={handleSubmit} className="master-form">
       <h3>{editingMaster ? "Sửa chủ trọ" : "Thêm chủ trọ"}</h3>
       <input
+        ref={nameInputRef}
         type="text"
         placeholder="Tên chủ trọ"
         value={name}

@@ -12,9 +12,9 @@ export default function Login() {
     e.preventDefault();
     try {
       const data = await login(username, password);
-      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data));
-      navigate("/");  
+      navigate("/");
     } catch (error) {
       alert("Sai tài khoản hoặc mật khẩu");
     }
@@ -42,7 +42,7 @@ export default function Login() {
           </button>
         </form>
         <p className="auth-link">
-          {/* Chưa có tài khoản? <Link to="/register">Đăng ký</Link> */}
+          Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
         </p>
       </div>
     </div>

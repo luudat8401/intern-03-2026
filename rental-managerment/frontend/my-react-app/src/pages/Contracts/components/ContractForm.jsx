@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getUsers } from "../../../api/user.api";
 import { getRooms } from "../../../api/room.api";
 
@@ -19,6 +19,7 @@ export default function ContractForm({ addContract, editingContract, updateContr
     getRooms().then(res => setRooms(res.data)).catch(console.error);
   }, []);
 
+  const priceInputRef = useRef(null);
   useEffect(() => {
     if (editingContract) {
       setFormData({
@@ -32,6 +33,9 @@ export default function ContractForm({ addContract, editingContract, updateContr
     } else {
       setFormData({ userId: "", roomId: "", price: "", deposit: "", startDate: "", endDate: "" });
     }
+    if (priceInputRef.current) {
+      priceInputRef.current.focus();
+    }
   }, [editingContract]);
 
   const handleChange = (e) => {
@@ -39,7 +43,6 @@ export default function ContractForm({ addContract, editingContract, updateContr
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Khi chọn phòng, tự điền sẵn giá tiền của phòng đó
   const handleRoomChange = (e) => {
     const selectedRoomId = e.target.value;
     const selectedRoom = rooms.find(r => r._id === selectedRoomId);
@@ -62,7 +65,9 @@ export default function ContractForm({ addContract, editingContract, updateContr
       <select name="userId" value={formData.userId} onChange={handleChange} required>
         <option value="">-- Chọn người thuê --</option>
         {users.map(u => (
-          <option key={u._id} value={u._id}>{u.name} - {u.phone}</option>
+          <option key={u._id} value={u._id}>
+             {u.isRepresentative ? "⭐ " : ""}{u.name} - {u.phone}
+          </option>
         ))}
       </select>
 
@@ -74,6 +79,7 @@ export default function ContractForm({ addContract, editingContract, updateContr
       </select>
 
       <input
+        ref={priceInputRef}
         name="price"
         type="number"
         placeholder="Giá thuê (VNĐ)"

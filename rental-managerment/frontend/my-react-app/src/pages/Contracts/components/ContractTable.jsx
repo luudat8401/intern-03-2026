@@ -17,8 +17,11 @@ export default function ContractTable({ contracts, deleteContract, onEdit }) {
                 <tbody>
                     {contracts.map(contract => (
                         <tr key={contract._id}>
-                            {/* Nhờ populate, userId đã là object { name, phone } */}
-                            <td>{contract.userId?.name || "-"}</td>
+                            {/* Nhờ populate, userId đã là object { name, phone, isRepresentative } */}
+                            <td style={{ fontWeight: '500' }}>
+                                {contract.userId?.isRepresentative && <span style={{color: '#f59e0b', marginRight: '4px'}}>⭐</span>}
+                                {contract.userId?.name || "-"}
+                            </td>
                             <td>{contract.roomId?.roomNumber || "-"}</td>
                             <td>{contract.price?.toLocaleString()}</td>
                             <td>{contract.deposit ? contract.deposit.toLocaleString() : "-"}</td>

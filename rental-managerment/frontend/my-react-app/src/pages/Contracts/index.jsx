@@ -55,16 +55,13 @@ export default function Contracts() {
         <div className="contracts-page">
 
             <h2>Quản lý hợp đồng</h2>
-
             <ContractStats contracts={contracts} />
-
             <ContractForm
                 addContract={addContract}
                 editingContract={editingContract}
                 updateContract={updateContract}
                 cancelEdit={() => setEditingContract(null)}
             />
-
             <ContractTable
                 contracts={contracts}
                 deleteContract={deleteContract}
@@ -73,4 +70,4 @@ export default function Contracts() {
 
         </div>
     );
-}
+}

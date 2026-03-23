@@ -1,84 +1,116 @@
-/* Reset */
-* {
-  box-sizing: border-box;
-}
-
-/* Page */
+/* Form Đăng nhập Đăng ký Kiểu Sang Trọng (Glassmorphism) */
 .auth-page {
   height: 100vh;
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f3f4f6;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Card */
+.auth-page::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, rgba(255,255,255,0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+}
+
 .auth-container {
-  width: 360px;
-  background: #fff;
-  padding: 32px;
-  border-radius: 10px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  width: 420px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  z-index: 1;
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Title */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .auth-title {
   text-align: center;
-  margin-bottom: 24px;
-  font-size: 22px;
-  font-weight: 600;
-  color: #111827;
+  margin-bottom: 30px;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.5px;
 }
 
-/* Form */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
-/* Input */
 .auth-input {
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  font-size: 15px;
+  transition: all 0.2s ease;
 }
 
 .auth-input:focus {
   outline: none;
-  border-color: #2563eb;
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
 }
 
-/* Button */
 .auth-button {
-  margin-top: 8px;
-  padding: 10px;
+  margin-top: 10px;
+  padding: 14px;
   border: none;
-  border-radius: 6px;
-  background: #2563eb;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background .2s;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .auth-button:hover {
-  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
 }
 
-/* Link */
+.auth-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+}
+
 .auth-link {
-  margin-top: 16px;
+  margin-top: 24px;
   text-align: center;
   font-size: 14px;
+  color: #64748b;
 }
 
 .auth-link a {
   color: #2563eb;
+  font-weight: 600;
   text-decoration: none;
+  transition: color 0.2s;
 }
 
 .auth-link a:hover {
+  color: #1e3a8a;
   text-decoration: underline;
 }

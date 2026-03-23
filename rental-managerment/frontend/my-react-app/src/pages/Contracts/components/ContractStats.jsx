@@ -1,4 +1,4 @@
-export default function ContractStats ({contracts}){
+export default function ContractStats({ contracts }) {
     const total = contracts.length;
     const active = contracts.filter(
         c => c.status === "active"
@@ -26,7 +26,6 @@ export default function ContractStats ({contracts}){
                 <div className="stat-title">Doanh thu</div>
                 <div className="stat-value">{revenue}</div>
             </div>
-
         </div>
     );
 }
