@@ -24,5 +24,4 @@ const roomSchema = new mongoose.Schema({
     ref: "Master"
   }
 }, { timestamps: true });
-
 module.exports = mongoose.model("Room", roomSchema);

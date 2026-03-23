@@ -1,85 +1,105 @@
-import { useRef, useState } from "react";
+import { useState, useEffect } from "react";
+import { getUsers } from "../../../api/user.api";
+import { getRooms } from "../../../api/room.api";
 
-export default function ContractForm({ addContract }) {
+export default function ContractForm({ addContract, editingContract, updateContract, cancelEdit }) {
+  const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [formData, setFormData] = useState({
-    user: "",
-    room: "",
+    userId: "",
+    roomId: "",
     price: "",
+    deposit: "",
     startDate: "",
     endDate: ""
   });
-  const count = useRef(0);
 
-  const handleChange = (a) => {
-    const { name, value } = a.target;
+  useEffect(() => {
+    getUsers().then(res => setUsers(res.data)).catch(console.error);
+    getRooms().then(res => setRooms(res.data)).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (editingContract) {
+      setFormData({
+        userId: editingContract.userId?._id || editingContract.userId || "",
+        roomId: editingContract.roomId?._id || editingContract.roomId || "",
+        price: editingContract.price,
+        deposit: editingContract.deposit || "",
+        startDate: editingContract.startDate?.slice(0, 10) || "",
+        endDate: editingContract.endDate?.slice(0, 10) || ""
+      });
+    } else {
+      setFormData({ userId: "", roomId: "", price: "", deposit: "", startDate: "", endDate: "" });
+    }
+  }, [editingContract]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    count.current ++;
-    console.log(count.current)
+  };
+
+  // Khi chọn phòng, tự điền sẵn giá tiền của phòng đó
+  const handleRoomChange = (e) => {
+    const selectedRoomId = e.target.value;
+    const selectedRoom = rooms.find(r => r._id === selectedRoomId);
+    setFormData(prev => ({ ...prev, roomId: selectedRoomId, price: selectedRoom?.price || "" }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const newContract = {
-      id: Date.now(),
-      ...formData,
-      status: "active"
-    };
-    addContract(newContract);
-
-    // reset form
-    setFormData({
-      user: "",
-      room: "",
-      price: "",
-      startDate: "",
-      endDate: ""
-    });
+    if (editingContract) {
+      updateContract(editingContract._id, formData);
+    } else {
+      addContract(formData);
+    }
+    setFormData({ userId: "", roomId: "", price: "", deposit: "", startDate: "", endDate: "" });
   };
 
   return (
     <form className="contract-form" onSubmit={handleSubmit}>
-      <input
-        name="user"
-        placeholder="Người thuê"
-        value={formData.user}
-        onChange={handleChange}
-        required
-      />
 
-      <input
-        name="room"
-        placeholder="Phòng"
-        value={formData.room}
-        onChange={handleChange}
-        required
-      />
+      <select name="userId" value={formData.userId} onChange={handleChange} required>
+        <option value="">-- Chọn người thuê --</option>
+        {users.map(u => (
+          <option key={u._id} value={u._id}>{u.name} - {u.phone}</option>
+        ))}
+      </select>
+
+      <select name="roomId" value={formData.roomId} onChange={handleRoomChange} required>
+        <option value="">-- Chọn phòng --</option>
+        {rooms.filter(r => r.status === "Trống").map(r => (
+          <option key={r._id} value={r._id}>{r.roomNumber} - {r.price?.toLocaleString()} VNĐ</option>
+        ))}
+      </select>
 
       <input
         name="price"
-        placeholder="Giá thuê"
+        type="number"
+        placeholder="Giá thuê (VNĐ)"
         value={formData.price}
         onChange={handleChange}
         required
       />
 
       <input
-        type="date"
-        name="startDate"
-        value={formData.startDate}
+        name="deposit"
+        type="number"
+        placeholder="Tiền cọc (VNĐ)"
+        value={formData.deposit}
         onChange={handleChange}
-        required
       />
 
-      <input
-        type="date"
-        name="endDate"
-        value={formData.endDate}
-        onChange={handleChange}
-        required
-      />
+      <input type="date" name="startDate" value={formData.startDate} onChange={handleChange} required />
+      <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} required />
 
-      <button type="submit">Tạo hợp đồng</button>
+      <div style={{ display: "flex", gap: "8px" }}>
+        <button type="submit">{editingContract ? "Cập nhật hợp đồng" : "Tạo hợp đồng"}</button>
+        {editingContract && (
+          <button type="button" onClick={cancelEdit} style={{ backgroundColor: "#6c757d" }}>Hủy</button>
+        )}
+      </div>
+
     </form>
   );
 }

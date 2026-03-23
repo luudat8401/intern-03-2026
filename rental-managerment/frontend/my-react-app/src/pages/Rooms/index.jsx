@@ -3,7 +3,10 @@ import RoomForm from "./components/RoomForm";
 import RoomTable from "./components/RoomTable";
 import RoomStats from "./components/RoomStats";
 import "./rooms.css";
-
+import { getRooms } from "../../api/room.api";
+import { createRoom } from "../../api/room.api";
+import { updateRoomApi } from "../../api/room.api";
+import { deleteRoomApi } from "../../api/room.api";
 export default function Rooms() {
 
     const [rooms, setRooms] = useState([]);
@@ -11,7 +14,6 @@ export default function Rooms() {
 
     const fetchRooms = async () => {
         try {
-            const { getRooms } = await import("../../api/room.api");
             const res = await getRooms();
             setRooms(res.data);
         } catch (error) {
@@ -25,7 +27,6 @@ export default function Rooms() {
 
     const addRoom = async (roomData) => {
         try {
-            const { createRoom } = await import("../../api/room.api");
             const res = await createRoom(roomData);
             setRooms([...rooms, res.data]);
         } catch (error) {
@@ -36,7 +37,6 @@ export default function Rooms() {
 
     const updateRoom = async (id, data) => {
         try {
-            const { updateRoomApi, getRooms } = await import("../../api/room.api");
             await updateRoomApi(id, data);
             const res = await getRooms();
             setRooms(res.data);
@@ -48,7 +48,6 @@ export default function Rooms() {
 
     const deleteRoom = async (id) => {
         try {
-            const { deleteRoomApi } = await import("../../api/room.api");
             await deleteRoomApi(id);
             setRooms(rooms.filter(r => r._id !== id));
         } catch (error) {
@@ -64,16 +63,16 @@ export default function Rooms() {
 
             <RoomStats rooms={rooms} />
 
-            <RoomForm 
-                addRoom={addRoom} 
+            <RoomForm
+                addRoom={addRoom}
                 editingRoom={editingRoom}
                 updateRoom={updateRoom}
                 cancelEdit={() => setEditingRoom(null)}
             />
 
-            <RoomTable 
-                rooms={rooms} 
-                deleteRoom={deleteRoom} 
+            <RoomTable
+                rooms={rooms}
+                deleteRoom={deleteRoom}
                 onEdit={(room) => setEditingRoom(room)}
             />
 
