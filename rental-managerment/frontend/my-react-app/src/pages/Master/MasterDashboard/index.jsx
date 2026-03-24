@@ -1,51 +1,19 @@
-import React, { useEffect, useState } from "react";
-import { getMasterById, updateMasterApi } from "../../../api/master.api";
+import React, { useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
+import { updateMasterApi } from "../../../api/master.api";
 import ProfileView from './components/ProfileView';
 import ProfileForm from './components/ProfileForm';
 import './master-info.css';
 
 export default function MasterDashboard() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  // Nhờ Context API, code gọi dữ liệu đã biến mất, chỉ cần bốc từ trên trời xuống
+  const { userProfile: user, loading, errorCtx: error, updateProfileContext } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      const storedUserStr = localStorage.getItem('user');
-      if (!storedUserStr) {
-        setError("Vui lòng đăng nhập lại để xem thông tin.");
-        setLoading(false);
-        return;
-      }
-      const storedUser = JSON.parse(storedUserStr);
-      const profileId = storedUser.profileId; 
-
-      if (!profileId) {
-        setError("Hồ sơ tài khoản chưa được thiết lập. Vui lòng liên hệ Admin.");
-        setLoading(false);
-        return;
-      }
-
-      const response = await getMasterById(profileId);
-      setUser(response.data);
-    } catch (err) {
-      console.error(err);
-      setError("Đã xảy ra lỗi hệ thống khi tải dữ liệu chủ trọ.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSave = async (updatedData) => {
     try {
       await updateMasterApi(user._id, updatedData);
-      setUser({ ...user, ...updatedData });
+      updateProfileContext(updatedData);
       setIsEditing(false);
     } catch (err) {
       alert("Cập nhật thông tin thất bại: " + (err.response?.data?.error || err.message));
@@ -57,7 +25,7 @@ export default function MasterDashboard() {
       <h2 className="master-heading">Thông tin Quản lý</h2>
       <p className="master-subheading">Xem và quản lý hồ sơ cá nhân Quản lý / Chủ trọ.</p>
       
-      {loading && <div style={{ marginTop: '20px' }}>⏳ Đang tải dữ liệu...</div>}
+      {loading && <div style={{ marginTop: '20px' }}>⏳ Đang đồng bộ dữ liệu...</div>}
       {error && <div style={{ color: '#d90429', marginTop: '20px', fontWeight: 'bold' }}>{error}</div>}
 
       {!loading && !error && user && (
