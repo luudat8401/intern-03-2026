@@ -42,7 +42,6 @@ router.put("/:id", async (req, res) => {
       .populate("userId", "name phone")
       .populate("roomId", "roomNumber price status");
 
-    // Nếu status hợp đồng đổi thành 'cancelled' hoặc 'expired', trả phòng về "Trống"
     if (req.body.status && (req.body.status === "cancelled" || req.body.status === "expired")) {
       await Room.findByIdAndUpdate(updated.roomId._id, { status: "Trống" });
     }

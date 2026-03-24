@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AdminLayout from "./components/AdminLayout";
-import MasterLayout from "./components/MasterLayout";
-import UserLayout from "./components/UserLayout";
-import RoleDirector from "./components/RoleDirector";
-import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/Layouts/AdminLayout";
+import MasterLayout from "./components/Layouts/MasterLayout";
+import UserLayout from "./components/Layouts/UserLayout";
+import RoleDirector from "./components/Guards/RoleDirector";
+import ProtectedRoute from "./components/Guards/ProtectedRoute";
 import {
-  Dashboard, MasterDashboard, TenantDashboard,
+  Dashboard, MasterDashboard, TenantInfo,
   TenantRooms, TenantContracts,
   MasterRooms, MasterContracts,
   Masters, Rooms, Users, Contracts, Login, Register
@@ -18,11 +18,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-
-        {/* Bộ định hướng tự động dựa theo role */}
         <Route path="/" element={<RoleDirector />} />
-
-        {/* ---------------- QUYỀN ADMIN ---------------- */}
         <Route
           path="/admin"
           element={
@@ -38,7 +34,6 @@ function App() {
           <Route path="contracts" element={<Contracts />} />
         </Route>
 
-        {/* -------------- QUYỀN CHỦ TRỌ (MASTER) -------------- */}
         <Route
           path="/master"
           element={
@@ -60,7 +55,7 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<TenantDashboard />} />
+          <Route index element={<TenantInfo />} />
           <Route path="rooms" element={<TenantRooms />} />
           <Route path="contracts" element={<TenantContracts />} />
         </Route>

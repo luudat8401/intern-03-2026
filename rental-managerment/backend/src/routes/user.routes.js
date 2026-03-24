@@ -32,6 +32,16 @@ router.get("/", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+router.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate("roomId", "roomNumber status");
+    if (!user) return res.status(404).json({ error: "Người dùng không tồn tại" });
+    console.log(`[GET] : get user by id`);
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 router.delete("/:id", async (req, res) => {
   try {

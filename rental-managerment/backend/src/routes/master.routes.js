@@ -23,6 +23,19 @@ router.get("/", async (req, res) => {
   console.log(`${time} [${method}] : get master list`)
   res.json(masters);
 });
+
+router.get("/:id", async (req, res) => {
+  try {
+    const master = await Master.findById(req.params.id);
+    if (!master) return res.status(404).json({ error: "Không tìm thấy chủ trọ" });
+    const method = req.method;
+    const time = new Date().toLocaleDateString();
+    console.log(`${time} [${method}] : get master by id`);
+    res.json(master);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 router.delete("/:id", async (req, res) => {
   try {
     await Master.findByIdAndDelete(req.params.id);

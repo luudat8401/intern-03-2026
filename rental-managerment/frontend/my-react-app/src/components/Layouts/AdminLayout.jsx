@@ -1,23 +1,17 @@
-import Sidebar from "./Sidebar";
-import Header from "./Header";
+import AdminSidebar from "../Navigation/AdminSidebar";
+import Header from "../Navigation/Header";
 import { Outlet } from "react-router-dom";
 
-export default function Layout() {
+export default function AdminLayout() {
   return (
     <div className="layout">
-
-      <Sidebar />
-
+      <AdminSidebar />
       <div className="main">
-
         <Header />
-
         <div className="content">
-          <Outlet/>
+          <Outlet />
         </div>
-
       </div>
-
     </div>
   );
 }

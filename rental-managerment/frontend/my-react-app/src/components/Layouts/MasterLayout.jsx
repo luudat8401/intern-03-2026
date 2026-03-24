@@ -1,6 +1,6 @@
-import MasterSidebar from "./MasterSidebar";
+import MasterSidebar from "../Navigation/MasterSidebar";
 import { Outlet, useNavigate } from "react-router-dom";
-import "../styles/master-theme.css"; 
+import "../../styles/master-theme.css";
 
 export default function MasterLayout() {
   const navigate = useNavigate();

@@ -1,11 +1,10 @@
-import UserSidebar from "./UserSidebar";
+import UserSidebar from "../Navigation/UserSidebar";
 import { Outlet, useNavigate } from "react-router-dom";
-import "../styles/user-theme.css"; // Link tới file CSS bóng bẩy mới tạo
+import "../../styles/user-theme.css";
 
 export default function UserLayout() {
   const navigate = useNavigate();
 
-  // Nút đăng xuất của thanh header
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
