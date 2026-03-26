@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export default function ProfileForm({ user, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -7,6 +7,14 @@ export default function ProfileForm({ user, onSave, onCancel }) {
     email: user?.email || '',
     address: user?.address || '',
   });
+
+  const nameInputRef = useRef(null);
+
+  useEffect(() => {
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -18,13 +26,21 @@ export default function ProfileForm({ user, onSave, onCancel }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSave(formData);
-  };
+  }
 
   return (
     <form className="profile-card" onSubmit={handleSubmit}>
       <div className="form-group">
         <label>Họ và tên Quản lý:</label>
-        <input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required />
+        <input
+          type="text"
+          name="name"
+          className="form-control"
+          value={formData.name}
+          onChange={handleChange}
+          ref={nameInputRef}
+          required
+        />
       </div>
       <div className="form-group">
         <label>Số điện thoại:</label>

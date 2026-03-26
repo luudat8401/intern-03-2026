@@ -14,7 +14,7 @@ export default function Register() {
     try {
       await register(username, password, role);
       alert("Đăng ký thành công! Vui lòng Đăng nhập.");
-      navigate("/login");  
+      navigate("/login");
     } catch (error) {
       alert("Đăng ký thất bại! Có thể tên đăng nhập đã tồn tại.");
       console.error(error);
@@ -41,15 +41,15 @@ export default function Register() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          
-          <select 
+
+          <select
             className="auth-input"
-            value={role} 
+            value={role}
             onChange={(e) => setRole(e.target.value)}
           >
             <option value="user">Khách thuê phòng</option>
             <option value="master">Chủ nhà trọ</option>
-            <option value="admin">Quản lý tổng (Admin)</option>
+            {/* <option value="admin">Quản lý tổng (Admin)</option> */}
           </select>
 
           <button className="auth-button" type="submit">

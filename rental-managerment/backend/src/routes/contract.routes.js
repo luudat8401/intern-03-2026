@@ -59,7 +59,6 @@ router.put("/:id", verifyToken, async (req, res) => {
     const contract = await Contract.findById(req.params.id);
     if (!contract) return res.status(404).json({ error: "Hợp đồng không tồn tại" });
 
-    // --- CASE 1: NGƯỜI THUÊ SỬA ---
     if (req.user.role === "user") {
       if (contract.userId.toString() !== req.user.profileId) {
         return res.status(403).json({ error: "Bạn không có quyền sửa hợp đồng này!" });

@@ -8,13 +8,10 @@ import './master-rooms.css';
 export default function MasterRooms() {
   const { userProfile } = useAuth();
   const [rooms, setRooms] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
 
   useEffect(() => {
-    // Chỉ tải danh sách phòng nếu Context đã tải xong Thông tin Chủ Trọ (userProfile != null)
     if (userProfile && userProfile._id) {
       fetchRooms();
     }
@@ -22,14 +19,11 @@ export default function MasterRooms() {
 
   const fetchRooms = async () => {
     try {
-      setLoading(true);
       const res = await getRoomsByMaster(userProfile._id);
       setRooms(res.data);
     } catch (err) {
       console.error(err);
       alert("Lỗi khi kết nối đến Server tải danh sách phòng.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -84,21 +78,20 @@ export default function MasterRooms() {
         + Đăng Phòng Mới
       </button>
 
-      {loading ? (
-        <p>Đang tải danh sách phòng từ hệ thống...</p>
-      ) : (
-        <div className="room-grid">
-          {rooms.length === 0 && <p style={{ color: '#6b7280' }}>Khu trọ hiện tại trống rỗng. Hãy thêm phòng đầu tiên!</p>}
-          {rooms.map(room => (
-            <RoomCard
-              key={room._id}
-              room={room}
-              onEdit={handleOpenEdit}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+      {
+        (
+          <div className="room-grid">
+            {rooms.length === 0 && <p style={{ color: '#6b7280' }}>Khu trọ hiện tại trống rỗng. Hãy thêm phòng đầu tiên!</p>}
+            {rooms.map(room => (
+              <RoomCard
+                key={room._id}
+                room={room}
+                onEdit={handleOpenEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        )}
 
       {/* Tấm Tường Rào Popup Gửi Dữ Liệu - Sẽ vô hình nếu isModalOpen = False */}
       <RoomModal

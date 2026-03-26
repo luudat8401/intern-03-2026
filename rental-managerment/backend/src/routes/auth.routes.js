@@ -67,7 +67,6 @@ router.post("/login", async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ error: "Mật khẩu không chính xác" });
         }
-
         const profileId = account.role === 'master' ? account.masterId?._id : account.userId?._id;
         const profileName = account.role === 'master' && account.masterId ? account.masterId.name :
             (account.role === 'user' && account.userId ? account.userId.name : account.username);

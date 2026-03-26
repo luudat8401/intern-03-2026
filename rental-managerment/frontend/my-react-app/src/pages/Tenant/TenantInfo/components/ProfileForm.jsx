@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export default function ProfileForm({ user, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
   });
+
+  const nameInputRef = useRef(null);
+
+  useEffect(() => {
+    if (nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -28,6 +36,7 @@ export default function ProfileForm({ user, onSave, onCancel }) {
           className="form-control"
           value={formData.name} 
           onChange={handleChange} 
+          ref={nameInputRef}
           required 
         />
       </div>

@@ -1,12 +1,16 @@
+import React from "react";
 import StatCard from "./StatCard";
 
-export default function StatsGrid() {
+const StatsGrid = React.memo(({ stats }) => {
   return (
     <div className="stats-grid">
-      <StatCard title="Tổng phòng" value="24" />
-      <StatCard title="Phòng đã thuê" value="18" />
-      <StatCard title="Khách thuê" value="21" />
-      <StatCard title="Hợp đồng đang hoạt động" value="18" />
+      <StatCard title="Tổng phòng" value={stats.totalRooms} />
+      <StatCard title="Phòng đã thuê" value={stats.rentedRooms} />
+      <StatCard title="Khách thuê" value={stats.totalUsers} />
+      <StatCard title="Hợp đồng active" value={stats.activeContracts} />
+      <StatCard title="Tổng chủ trọ" value={stats.totalMasters} />
     </div>
   );
-}
+});
+
+export default StatsGrid;

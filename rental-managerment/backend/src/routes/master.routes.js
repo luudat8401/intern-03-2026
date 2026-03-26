@@ -17,11 +17,15 @@ router.post("/", async (req, res) => {
   
 });
 router.get("/", async (req, res) => {
-  const masters = await Master.find();
-  const method = req.method
-  const time = new Date().toLocaleDateString()
-  console.log(`${time} [${method}] : get master list`)
-  res.json(masters);
+  try {
+    const masters = await Master.find();
+    const method = req.method;
+    const time = new Date().toLocaleDateString();
+    console.log(`${time} [${method}] : get master list`);
+    res.json(masters);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.get("/:id", async (req, res) => {

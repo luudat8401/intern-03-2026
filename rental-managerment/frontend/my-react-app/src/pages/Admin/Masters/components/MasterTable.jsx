@@ -1,4 +1,4 @@
-export default function MasterTable({ masters, deleteMaster, onEdit }) {
+export default function MasterTable({ masters, deleteMaster }) {
   return (
     <div className="master-table">
       <h3>Danh sách chủ trọ</h3>
@@ -23,7 +23,6 @@ export default function MasterTable({ masters, deleteMaster, onEdit }) {
               <td>{master.address}</td>
 
               <td>
-                <button onClick={() => onEdit(master)} style={{ marginRight: '8px', backgroundColor: '#0ea5e9', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}>Sửa</button>
                 <button onClick={() => deleteMaster(master._id)} style={{ padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', border: 'none', backgroundColor: '#ef4444', color: '#fff' }}>
                   Xóa
                 </button>

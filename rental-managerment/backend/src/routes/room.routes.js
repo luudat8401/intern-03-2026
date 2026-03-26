@@ -15,7 +15,6 @@ const deleteImageFromCloudinary = async (imageUrl) => {
       const fullPath = pathArr.join('/');
       const publicId = fullPath.substring(0, fullPath.lastIndexOf('.'));
 
-      //Gọi Cloudinary 
       await cloudinary.uploader.destroy(publicId);
       const time = new Date().toLocaleString();
       console.log(`${time} [Cloudinary] Đã xóa dọn rác ảnh đính kèm: ${publicId}`);

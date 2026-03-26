@@ -17,14 +17,14 @@ export default function UserTable({ users, deleteUser, onEdit }) {
                         <tr key={user._id} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'default' }}>
                             <td style={{ padding: '16px', fontWeight: '500', color: '#0f172a' }}>{user.name}</td>
                             <td style={{ padding: '16px', color: '#475569' }}>{user.phone}</td>
-                            
+
                             {/* Trích xuất chuỗi tên Phòng từ dữ liệu Database đã Populate */}
                             <td style={{ padding: '16px', color: '#3b82f6', fontWeight: '600' }}>
                                 {user.roomId ? user.roomId.roomNumber : "Chưa có phòng"}
                             </td>
 
                             <td style={{ padding: '16px' }}>
-                                {user.isRepresentative 
+                                {user.isRepresentative
                                     ? <span style={{ padding: '4px 10px', background: '#dcfce3', color: '#166534', borderRadius: '999px', fontSize: '12px', fontWeight: '600' }}>⭐ Đại diện</span>
                                     : <span style={{ padding: '4px 10px', background: '#f1f5f9', color: '#64748b', borderRadius: '999px', fontSize: '12px' }}>Bạn cùng phòng</span>
                                 }

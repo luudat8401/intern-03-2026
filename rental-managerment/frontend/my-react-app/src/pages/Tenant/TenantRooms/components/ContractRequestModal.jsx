@@ -9,8 +9,14 @@ export default function ContractRequestModal({ room, onClose, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
 
+  const today = new Date().toISOString().split('T')[0];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.endDate && formData.endDate < formData.startDate) {
+      alert('Ngày kết thúc không được nhỏ hơn ngày bắt đầu!');
+      return;
+    }
     try {
       setLoading(true);
       const payload = {
@@ -45,6 +51,7 @@ export default function ContractRequestModal({ room, onClose, onSuccess }) {
             <input
               type="date"
               required
+              min={today}
               value={formData.startDate}
               onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
             />
@@ -55,6 +62,7 @@ export default function ContractRequestModal({ room, onClose, onSuccess }) {
             <input
               type="date"
               required
+              min={formData.startDate || today}
               value={formData.endDate}
               onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
             />
