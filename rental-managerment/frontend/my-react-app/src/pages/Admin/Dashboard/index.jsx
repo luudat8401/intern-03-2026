@@ -12,10 +12,8 @@ export default function Dashboard() {
   const [users, setUsers] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [masters, setMasters] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
       const [roomsRes, usersRes, contractsRes, mastersRes] = await Promise.all([
         getRooms(),
@@ -29,8 +27,6 @@ export default function Dashboard() {
       setMasters(mastersRes.data);
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu Dashboard:", err);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -38,9 +34,7 @@ export default function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  // Sử dụng useMemo để tính toán các con số thống kê chuyên sâu
   const stats = useMemo(() => {
-    console.log("--- Đang tính toán lại stats Dashboard ---");
     return {
       totalRooms: rooms.length,
       rentedRooms: rooms.filter(r => r.status === "Đã thuê").length,
@@ -50,17 +44,12 @@ export default function Dashboard() {
     };
   }, [rooms, users, contracts, masters]);
 
-  if (loading) return <div className="dashboard-loading">Đang tải dữ liệu hệ thống...</div>;
-
   return (
     <div className="dashboard">
       <h2>Hệ thống Quản lý - Dashboard</h2>
-      
       <StatsGrid stats={stats} />
-
       <div className="dashboard-content">
         <RecentRooms rooms={rooms} />
-        {/* Có thể thêm các danh sách khác ở đây */}
       </div>
     </div>
   );

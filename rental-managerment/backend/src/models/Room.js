@@ -12,7 +12,7 @@ const roomSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["Trống", "Đã thuê", "Bảo trì"],
+    enum: ["Trống", "Đang xử lý", "Đã thuê", "Bảo trì"],
     default: "Trống"
   },
   capacity: {

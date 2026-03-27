@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Room = require("../models/Room");
+const Account = require("../models/Account");
+const Contract = require("../models/Contract");
 
 router.post("/", async (req, res) => {
   try {
@@ -45,9 +47,18 @@ router.get("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
-    console.log(`[DELETE] : Delete user`);
-    res.json({ message: "Deleted successfully" });
+    const userId = req.params.id;
+    const activeContracts = await Contract.find({ userId: userId, status: "active" });
+    const roomIds = activeContracts.map(c => c.roomId);
+    if (roomIds.length > 0) {
+      await Room.updateMany({ _id: { $in: roomIds } }, { status: "Trống" });
+    }
+    await Contract.deleteMany({ userId: userId });
+    await Account.deleteOne({ userId: userId });
+    await User.findByIdAndDelete(userId);
+
+    console.log(`[DELETE] : Cascade Delete User (Rooms Reset, Contracts, Account, User Profile)`);
+    res.json({ message: "Đã xóa toàn bộ dữ liệu liên quan đến khách thuê và giải phóng phòng thành công!" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

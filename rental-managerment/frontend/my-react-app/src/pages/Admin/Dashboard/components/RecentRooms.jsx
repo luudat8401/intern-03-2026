@@ -8,7 +8,6 @@ const RecentRooms = React.memo(({ rooms }) => {
   return (
     <div className="recent-box">
       <h3>Phòng mới cập nhật</h3>
-
       <table>
         <thead>
           <tr>
@@ -17,7 +16,6 @@ const RecentRooms = React.memo(({ rooms }) => {
             <th>Tình trạng</th>
           </tr>
         </thead>
-
         <tbody>
           {lastFiveRooms.map((room) => (
             <tr key={room._id}>

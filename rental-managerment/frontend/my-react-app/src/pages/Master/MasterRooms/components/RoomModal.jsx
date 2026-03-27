@@ -86,6 +86,7 @@ export default function RoomModal({ isOpen, onClose, onSave, roomData, masterId 
               <option value="Trống">Trống</option>
               <option value="Đã thuê">Đã thuê</option>
               <option value="Bảo trì">Bảo trì</option>
+              <option value="Đang xử lý">Đang xử lý</option>
             </select>
           </div>
 

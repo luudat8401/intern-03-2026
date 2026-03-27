@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function ProfileView({ user, onEdit }) {
+export default function ProfileView({ user, onEdit, onGetMaster }) {
   if (!user) return null;
 
   return (

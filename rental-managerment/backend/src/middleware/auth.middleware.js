@@ -18,7 +18,6 @@ const verifyToken = (req, res, next) => {
 };
 const checkRole = (allowedRoles) => {
     return (req, res, next) => {
-        console.log(`[AUTH] CheckRole: Required ${JSON.stringify(allowedRoles)}, User has role: "${req.user?.role}"`);
         if (!req.user || !allowedRoles.includes(req.user.role)) {
             return res.status(403).json({ error: "Bạn không có quyền truy cập vào khu vực này!" });
         }

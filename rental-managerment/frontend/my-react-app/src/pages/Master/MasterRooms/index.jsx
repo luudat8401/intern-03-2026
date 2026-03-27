@@ -41,7 +41,6 @@ export default function MasterRooms() {
     if (window.confirm("Chắc chắn chưa ?")) {
       try {
         await deleteRoomApi(id);
-        // Lọc khỏi mảng Rooms ngay lập tức để tiết kiệm chi phí gọi lại API Server
         setRooms(rooms.filter(r => r._id !== id));
       } catch (err) {
         alert("Xóa thất bại! Không cho phép xóa.");
@@ -49,20 +48,18 @@ export default function MasterRooms() {
     }
   };
 
-  // Hàm Hứng Chịu Gói Hàng (FormData multipart) do Con Mảnh RoomModal Truyền Lên
   const handleSaveRoom = async (formData, roomId) => {
     try {
-      if (roomId) { // chế độ sửa
-
+      if (roomId) {
         const res = await updateRoomApi(roomId, formData);
         setRooms(rooms.map(r => r._id === roomId ? res.data : r));
         alert("Cập nhật phòng thành công!");
-      } else {      // chế độ thêm
+      } else {
         const res = await createRoom(formData);
         setRooms([...rooms, res.data]);
         alert("Đã đẩy thông tin phòng và tải ảnh lên Cloud thành công!");
       }
-      setIsModalOpen(false); // Cất bảng Popup đi
+      setIsModalOpen(false);
     } catch (err) {
       alert("Gặp sự cố lỗi: " + (err.response?.data?.error || err.message));
     }
@@ -77,7 +74,6 @@ export default function MasterRooms() {
       <button className="btn-add-room" onClick={handeOpenAdd}>
         + Đăng Phòng Mới
       </button>
-
       {
         (
           <div className="room-grid">
@@ -92,8 +88,6 @@ export default function MasterRooms() {
             ))}
           </div>
         )}
-
-      {/* Tấm Tường Rào Popup Gửi Dữ Liệu - Sẽ vô hình nếu isModalOpen = False */}
       <RoomModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

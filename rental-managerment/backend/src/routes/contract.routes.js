@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", verifyToken, checkRole(["user"]), async (req, res) => {
+router.post("/", checkRole(["user"]), async (req, res) => {
   try {
     const { roomId } = req.body;
     const room = await Room.findById(roomId);
@@ -42,19 +42,22 @@ router.post("/", verifyToken, checkRole(["user"]), async (req, res) => {
     const contract = new Contract(req.body);
     await contract.save();
 
+    // Cập nhật trạng thái phòng sang "Đang xử lý"
+    await Room.findByIdAndUpdate(roomId, { status: "Đang xử lý" });
+
     const populated = await Contract.findById(contract._id)
       .populate("userId", "name phone")
       .populate("roomId", "roomNumber price status")
       .populate("masterId", "name phone");
 
-    console.log(`[POST] : Tenant ${req.user.id} requested a contract for room ${roomId}`);
+    console.log(`[POST] : Tenant ${req.user.id} requested a contract for room ${roomId}. Room status set to "Đang xử lý".`);
     res.json(populated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
     if (!contract) return res.status(404).json({ error: "Hợp đồng không tồn tại" });
@@ -92,9 +95,11 @@ router.put("/:id", verifyToken, async (req, res) => {
       if (newStatus === "active" && oldStatus !== "active") {
         await Room.findByIdAndUpdate(updated.roomId._id, { status: "Đã thuê" });
         await User.findByIdAndUpdate(updated.userId._id, { roomId: updated.roomId._id });
-      } else if ((newStatus === "cancelled" || newStatus === "decline") && oldStatus === "active") {
-        await Room.findByIdAndUpdate(updated.roomId._id, { status: "Trống" });
-        await User.findByIdAndUpdate(updated.userId._id, { roomId: null });
+      } else if (newStatus === "cancelled" || newStatus === "decline") {
+        if (oldStatus === "active" || oldStatus === "pending") {
+          await Room.findByIdAndUpdate(updated.roomId._id, { status: "Trống" });
+          await User.findByIdAndUpdate(updated.userId._id, { roomId: null });
+        }
       }
 
       console.log(`[PUT] : Master ${req.user.id} updated contract ${req.params.id} to ${newStatus}`);
@@ -107,7 +112,7 @@ router.put("/:id", verifyToken, async (req, res) => {
   }
 });
 
-router.delete("/:id", verifyToken, checkRole(["master", "user"]), async (req, res) => {
+router.delete("/:id", checkRole(["master", "user"]), async (req, res) => {
   try {
     const contract = await Contract.findById(req.params.id);
     if (!contract) return res.status(404).json({ error: "Hợp đồng không tồn tại" });
@@ -123,6 +128,7 @@ router.delete("/:id", verifyToken, checkRole(["master", "user"]), async (req, re
         return res.status(403).json({ error: "Bạn không có quyền xóa hợp đồng này!" });
       }
     }
+    // Nếu hợp đồng đang active (đã thuê) thì phải giải phóng phòng và người thuê
     if (contract.status === "active") {
       await Room.findByIdAndUpdate(contract.roomId, { status: "Trống" });
       await User.findByIdAndUpdate(contract.userId, { roomId: null });

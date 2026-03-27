@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Room = require("../models/Room");
 const Master = require("../models/Master");
+const Contract = require("../models/Contract");
+const User = require("../models/User");
 
 const { uploadCloud, cloudinary } = require("../config/cloudinary");
 
@@ -57,8 +59,22 @@ router.post("/", uploadCloud.single('image'), async (req, res) => {
 
 router.put("/:id", uploadCloud.single('image'), async (req, res) => {
   try {
-    const roomInfo = await Room.findById(req.params.id);
+    const roomId = req.params.id;
+    const roomInfo = await Room.findById(roomId);
     if (!roomInfo) return res.status(404).json({ error: "Phòng không tồn tại" });
+    if (req.body.status && req.body.status !== roomInfo.status) {
+      const activeContract = await Contract.findOne({
+        roomId: roomId,
+        status: { $in: ["active", "pending"] }
+      });
+
+      if (activeContract) {
+        return res.status(400).json({
+          error: `Không thể thay đổi trạng thái phòng thủ công vì phòng đang có hợp đồng ${activeContract.status === 'active' ? 'đang hiệu lực' : 'đang chờ duyệt'}.`
+        });
+      }
+    }
+
     // upload hình mới 
     if (req.file) {
       // xóa ảnh cũ
@@ -68,7 +84,7 @@ router.put("/:id", uploadCloud.single('image'), async (req, res) => {
       // đè link ảnh
       req.body.thumbnail = req.file.path;
     }
-    const updatedRoom = await Room.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    const updatedRoom = await Room.findByIdAndUpdate(roomId, req.body, { new: true })
       .populate("masterId", "name phone");
     res.json(updatedRoom);
   } catch (err) {
@@ -78,14 +94,18 @@ router.put("/:id", uploadCloud.single('image'), async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const roomInfo = await Room.findById(req.params.id);
+    const roomId = req.params.id;
+    const roomInfo = await Room.findById(roomId);
     if (!roomInfo) return res.status(404).json({ error: "Không thể xóa. Phòng không tồn tại" });
     if (roomInfo.thumbnail) {
       await deleteImageFromCloudinary(roomInfo.thumbnail);
     }
-    await Room.findByIdAndDelete(req.params.id);
+    await Contract.deleteMany({ roomId: roomId });
+    await User.updateMany({ roomId: roomId }, { roomId: null });
+    await Room.findByIdAndDelete(roomId);
 
-    res.json({ message: "Đã xóa triệt để phòng và rác ảnh thành công!" });
+    console.log(`[DELETE] : Cascade Delete Room ${roomId} (Cloudinary, Contracts, Users Reset, Room)`);
+    res.json({ message: "Đã xóa triệt để phòng, hợp đồng liên quan và rác ảnh thành công!" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

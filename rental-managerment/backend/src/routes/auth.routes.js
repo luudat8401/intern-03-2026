@@ -11,7 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 router.post("/register", async (req, res) => {
     try {
         const { username, password, role, name, phone, email, address } = req.body;
-
+        console.log(req.body)
         const existingAccount = await Account.findOne({ username });
         if (existingAccount) {
             return res.status(400).json({ error: "Tên đăng nhập đã tồn tại" });
@@ -46,6 +46,7 @@ router.post("/register", async (req, res) => {
             userId,
             masterId
         });
+        console.log(account.role)
         await account.save();
         res.status(201).json({ message: "Đăng ký thành công!" });
     } catch (err) {
