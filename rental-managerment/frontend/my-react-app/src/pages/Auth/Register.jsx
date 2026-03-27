@@ -8,8 +8,20 @@ import FormField from "../../components/Common/FormField";
 import { useState } from "react";
 
 const schema = yup.object({
-  username: yup.string().required('Vui lòng nhập tên').trim().matches(/^\S+$/, 'Tên không được chứa khoảng trắng').min(6, 'Tên ít nhất 6 ký tự').max(20, 'Tên nhiều nhất 20 ký tự'),
-  password: yup.string().required('Vui lòng nhập mật khẩu').trim().matches(/^\S+$/, 'Mật khẩu không được chứa khoảng trắng').min(6, 'Mật khẩu ít nhất 6 ký tự').max(20, 'Mật khẩu nhiều nhất 20 ký tự'),
+  username: yup.
+    string().
+    required('Vui lòng nhập tên').
+    trim().
+    matches(/^\S+$/, 'Tên không được chứa khoảng trắng').
+    min(6, 'Tên ít nhất 6 ký tự').
+    max(20, 'Tên nhiều nhất 20 ký tự'),
+  password: yup.
+    string().
+    required('Vui lòng nhập mật khẩu').
+    trim().
+    matches(/^\S+$/, 'Mật khẩu không được chứa khoảng trắng').
+    min(6, 'Mật khẩu ít nhất 6 ký tự').
+    max(20, 'Mật khẩu nhiều nhất 20 ký tự'),
   role: yup.string().required('Vui lòng chọn vai trò'),
 }).required();
 
@@ -27,9 +39,8 @@ export default function Register() {
 
   const onInvalid = (errors) => {
     setGeneralError("Thông tin đăng ký không hợp lệ.");
-    // Chỉ reset giá trị của các trường bị lỗi
     Object.keys(errors).forEach((field) => {
-      setValue(field, ""); // Xóa trắng nội dung của ô bị lỗi
+      setValue(field, "");
     });
   };
 
@@ -56,7 +67,7 @@ export default function Register() {
             register={register}
             error={errors.username}
           />
-          
+
           <FormField
             name="password"
             type="password"

@@ -39,9 +39,8 @@ export default function Login() {
 
   const onInvalid = (errors) => {
     setGeneralError("Wrong username/email or password");
-    // Chỉ reset giá trị của các trường bị lỗi
     Object.keys(errors).forEach((field) => {
-      setValue(field, ""); // Xóa trắng nội dung của ô bị lỗi
+      setValue(field, "");
     });
   };
 
