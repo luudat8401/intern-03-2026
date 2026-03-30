@@ -53,7 +53,6 @@ class ContractService {
         throw new Error("Hợp đồng đã được duyệt hoặc từ chối, không thể sửa nội dung!");
       }
 
-      // Khách thuê chỉ được sửa thông tin mô tả/yêu cầu, không được sửa status/ID
       delete data.status;
       delete data.masterId;
       delete data.userId;

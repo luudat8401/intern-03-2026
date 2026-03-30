@@ -21,12 +21,19 @@ class RoomController {
 
   async createRoom(req, res) {
     try {
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Dữ liệu đầu vào không hợp lệ",
+          error: "Vui lòng cung cấp ảnh cho phòng."
+        });
+      }
       const room = await roomService.createRoom(req.body, req.file);
       res.status(201).json(room);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   }
+
 
   async updateRoom(req, res) {
     try {

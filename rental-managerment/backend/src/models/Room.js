@@ -25,6 +25,7 @@ const roomSchema = new mongoose.Schema({
   },
   thumbnail: {
     type: String,
+    required: true
   },
   masterId: {
     type: mongoose.Schema.Types.ObjectId,
