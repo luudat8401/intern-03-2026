@@ -16,7 +16,7 @@ export default function RoomTable({ rooms, deleteRoom, onEdit }) {
 
                 <tbody>
                     {rooms.map(room => (
-                        <tr key={room._id || room.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <tr key={room.id || room.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                             <td style={{ padding: '16px', fontWeight: '600', color: '#3b82f6' }}>{room.roomNumber}</td>
                             <td style={{ padding: '16px', color: '#475569' }}>{room.price ? room.price.toLocaleString() : "0"}</td>
                             
@@ -45,7 +45,7 @@ export default function RoomTable({ rooms, deleteRoom, onEdit }) {
                                 </button>
                                 <button
                                     className="btn-delete"
-                                    onClick={() => deleteRoom(room._id || room.id)}
+                                    onClick={() => deleteRoom(room.id || room.id)}
                                 >
                                     Xóa
                                 </button>

@@ -12,7 +12,7 @@ export default function TenantInfo() {
 
   const handleSave = async (updatedData) => {
     try {
-      await updateUserApi(user._id, updatedData);
+      await updateUserApi(user.id, updatedData);
       updateProfileContext(updatedData);
       setIsEditing(false);
       alert('Cập nhật thông tin thành công!');

@@ -13,7 +13,7 @@ export default function MasterDashboard() {
 
   const handleSave = async (updatedData) => {
     try {
-      await updateMasterApi(user._id, updatedData);
+      await updateMasterApi(user.id, updatedData);
       updateProfileContext(updatedData);
       setIsEditing(false);
     } catch (err) {

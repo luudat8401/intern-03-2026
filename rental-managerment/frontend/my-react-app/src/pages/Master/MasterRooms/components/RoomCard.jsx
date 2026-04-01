@@ -17,7 +17,7 @@ export default function RoomCard({ room, onEdit, onDelete }) {
 
         <div className="room-actions">
           <button className="btn-edit-room" onClick={() => onEdit(room)}>Chỉnh sửa</button>
-          <button className="btn-delete-room" onClick={() => onDelete(room._id)}>Xóa</button>
+          <button className="btn-delete-room" onClick={() => onDelete(room.id)}>Xóa</button>
         </div>
       </div>
     </div>

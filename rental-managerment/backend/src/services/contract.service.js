@@ -1,55 +1,63 @@
-const Contract = require("../models/Contract");
-const Room = require("../models/Room");
-const User = require("../models/User");
+const { AppDataSource } = require("../config/db");
 
 class ContractService {
   async getContracts({ role, profileId }) {
+    const contractRepo = AppDataSource.getRepository("Contract");
     let query = {};
     if (role === "master") {
-      query.masterId = profileId;
+      query.masterId = parseInt(profileId);
     } else if (role === "user") {
-      query.userId = profileId;
+      query.userId = parseInt(profileId);
     }
 
-    return await Contract.find(query)
-      .populate("userId", "name phone isRepresentative")
-      .populate("roomId", "roomNumber price status")
-      .populate("masterId", "name phone");
+    return await contractRepo.find({
+      where: query,
+      relations: ["user", "room", "master"]
+    });
   }
 
   async createContract(data, { profileId }) {
-    const { roomId } = data;
-    const room = await Room.findById(roomId);
+    const contractRepo = AppDataSource.getRepository("Contract");
+    const roomRepo = AppDataSource.getRepository("Room");
+    
+    const roomId = parseInt(data.roomId);
+    const room = await roomRepo.findOne({ where: { id: roomId } });
     if (!room) throw new Error("Phòng không tồn tại");
 
     if (room.status !== "Trống") {
       throw new Error("Phòng này không thể đăng ký thuê lúc này!");
     }
 
-    data.userId = profileId;
+    data.userId = parseInt(profileId);
+    data.roomId = roomId;
     data.masterId = room.masterId;
-    data.status = "pending";
+    data.status = 0; // 0: pending
 
-    const contract = new Contract(data);
-    await contract.save();
+    const contract = contractRepo.create(data);
+    const savedContract = await contractRepo.save(contract);
 
-    await Room.findByIdAndUpdate(roomId, { status: "Đang xử lý" });
+    await roomRepo.update(roomId, { status: 2 }); // Giả sử 2 là "Đang xử lý" (hoặc giữ nguyên nếu bạn dùng 0/1)
 
-    return await Contract.findById(contract._id)
-      .populate("userId", "name phone")
-      .populate("roomId", "roomNumber price status")
-      .populate("masterId", "name phone");
+    return await contractRepo.findOne({
+      where: { id: savedContract.id },
+      relations: ["user", "room", "master"]
+    });
   }
 
   async updateContract(id, data, { role, profileId }) {
-    const contract = await Contract.findById(id);
+    const contractRepo = AppDataSource.getRepository("Contract");
+    const roomRepo = AppDataSource.getRepository("Room");
+    const userRepo = AppDataSource.getRepository("User");
+
+    const contractId = parseInt(id);
+    const contract = await contractRepo.findOne({ where: { id: contractId } });
     if (!contract) throw new Error("Hợp đồng không tồn tại");
 
     if (role === "user") {
-      if (contract.userId.toString() !== profileId) {
+      if (contract.userId !== parseInt(profileId)) {
         throw new Error("Bạn không có quyền sửa hợp đồng này!");
       }
-      if (contract.status !== "pending") {
+      if (contract.status !== 0) {
         throw new Error("Hợp đồng đã được duyệt hoặc từ chối, không thể sửa nội dung!");
       }
 
@@ -57,32 +65,35 @@ class ContractService {
       delete data.masterId;
       delete data.userId;
 
-      return await Contract.findByIdAndUpdate(id, data, { new: true })
-        .populate("userId", "name phone")
-        .populate("roomId", "roomNumber price status");
+      await contractRepo.update(contractId, data);
+      return await contractRepo.findOne({
+        where: { id: contractId },
+        relations: ["user", "room"]
+      });
     }
 
     if (role === "master") {
-      if (contract.masterId.toString() !== profileId) {
+      if (contract.masterId !== parseInt(profileId)) {
         throw new Error("Bạn không có quyền xử lý hợp đồng này!");
       }
 
       const oldStatus = contract.status;
       const newStatus = data.status;
 
-      const updated = await Contract.findByIdAndUpdate(id, data, { new: true })
-        .populate("userId", "name phone")
-        .populate("roomId", "roomNumber price status")
-        .populate("masterId", "name phone");
+      await contractRepo.update(contractId, data);
+      const updated = await contractRepo.findOne({
+        where: { id: contractId },
+        relations: ["user", "room", "master"]
+      });
 
       // Logic cập nhật trạng thái phòng và người thuê dựa trên status hợp đồng
-      if (newStatus === "active" && oldStatus !== "active") {
-        await Room.findByIdAndUpdate(updated.roomId._id, { status: "Đã thuê" });
-        await User.findByIdAndUpdate(updated.userId._id, { roomId: updated.roomId._id });
-      } else if (newStatus === "cancelled" || newStatus === "decline" || newStatus === "completed") {
-        if (oldStatus === "active" || oldStatus === "pending") {
-          await Room.findByIdAndUpdate(updated.roomId._id, { status: "Trống" });
-          await User.findByIdAndUpdate(updated.userId._id, { roomId: null });
+      if (newStatus === 1 && oldStatus !== 1) { // 1: active
+        await roomRepo.update(updated.roomId, { status: 1 }); // 1: đã thuê
+        await userRepo.update(updated.userId, { roomId: updated.roomId });
+      } else if (newStatus === 3 || newStatus === 2 || newStatus === 4) { // 3: cancelled, 2: declined, 4: completed
+        if (oldStatus === 1 || oldStatus === 0) {
+          await roomRepo.update(updated.roomId, { status: 0 }); // 0: trống
+          await userRepo.update(updated.userId, { roomId: null });
         }
       }
 
@@ -93,29 +104,34 @@ class ContractService {
   }
 
   async deleteContract(id, { role, profileId }) {
-    const contract = await Contract.findById(id);
+    const contractRepo = AppDataSource.getRepository("Contract");
+    const roomRepo = AppDataSource.getRepository("Room");
+    const userRepo = AppDataSource.getRepository("User");
+
+    const contractId = parseInt(id);
+    const contract = await contractRepo.findOne({ where: { id: contractId } });
     if (!contract) throw new Error("Hợp đồng không tồn tại");
 
     if (role === "user") {
-      if (contract.userId.toString() !== profileId) {
+      if (contract.userId !== parseInt(profileId)) {
         throw new Error("Bạn không có quyền xóa hợp đồng này!");
       }
-      if (contract.status !== "pending") {
+      if (contract.status !== 0) {
         throw new Error("Hợp đồng đã được duyệt, không thể tự ý xóa. Vui lòng liên hệ chủ trọ.");
       }
     } else if (role === "master") {
-      if (contract.masterId.toString() !== profileId) {
+      if (contract.masterId !== parseInt(profileId)) {
         throw new Error("Bạn không có quyền xóa hợp đồng này!");
       }
     }
 
     // Nếu hợp đồng đang active (đã thuê) thì phải giải phóng phòng và người thuê khi xóa
-    if (contract.status === "active") {
-      await Room.findByIdAndUpdate(contract.roomId, { status: "Trống" });
-      await User.findByIdAndUpdate(contract.userId, { roomId: null });
+    if (contract.status === 1) { // 1: active
+      await roomRepo.update(contract.roomId, { status: 0 }); // 0: trống
+      await userRepo.update(contract.userId, { roomId: null });
     }
 
-    await Contract.findByIdAndDelete(id);
+    await contractRepo.delete(contractId);
     return { message: "Đã xóa hợp đồng thành công" };
   }
 }

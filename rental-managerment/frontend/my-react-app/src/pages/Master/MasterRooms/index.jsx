@@ -12,14 +12,14 @@ export default function MasterRooms() {
   const [editingRoom, setEditingRoom] = useState(null);
 
   useEffect(() => {
-    if (userProfile && userProfile._id) {
+    if (userProfile && userProfile.id) {
       fetchRooms();
     }
   }, [userProfile]);
 
   const fetchRooms = async () => {
     try {
-      const res = await getRoomsByMaster(userProfile._id);
+      const res = await getRoomsByMaster(userProfile.id);
       setRooms(res.data);
     } catch (err) {
       console.error(err);
@@ -41,7 +41,7 @@ export default function MasterRooms() {
     if (window.confirm("Chắc chắn chưa ?")) {
       try {
         await deleteRoomApi(id);
-        setRooms(rooms.filter(r => r._id !== id));
+        setRooms(rooms.filter(r => r.id !== id));
       } catch (err) {
         alert("Xóa thất bại! Không cho phép xóa.");
       }
@@ -52,7 +52,7 @@ export default function MasterRooms() {
     try {
       if (roomId) {
         const res = await updateRoomApi(roomId, formData);
-        setRooms(rooms.map(r => r._id === roomId ? res.data : r));
+        setRooms(rooms.map(r => r.id === roomId ? res.data : r));
         alert("Cập nhật phòng thành công!");
       } else {
         const res = await createRoom(formData);
@@ -80,7 +80,7 @@ export default function MasterRooms() {
             {rooms.length === 0 && <p style={{ color: '#6b7280' }}>Khu trọ hiện tại trống rỗng. Hãy thêm phòng đầu tiên!</p>}
             {rooms.map(room => (
               <RoomCard
-                key={room._id}
+                key={room.id}
                 room={room}
                 onEdit={handleOpenEdit}
                 onDelete={handleDelete}
@@ -93,7 +93,7 @@ export default function MasterRooms() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveRoom}
         roomData={editingRoom}
-        masterId={userProfile ? userProfile._id : ''}
+        masterId={userProfile ? userProfile.id : ''}
       />
     </div>
   );

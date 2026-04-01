@@ -1,50 +1,36 @@
-const mongoose = require("mongoose");
+const { EntitySchema } = require("typeorm");
 
-const accountSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: [true, "Tên đăng nhập là bắt buộc"],
-        unique: true,
-        trim: true
+module.exports = new EntitySchema({
+  name: "Account",
+  tableName: "accounts",
+  columns: {
+    id: { primary: true, type: "int", generated: true },
+    username: { type: "varchar", unique: true, nullable: false },
+    password: { type: "varchar", nullable: true },
+    googleId: { type: "varchar", unique: true, nullable: true },
+    email: { type: "varchar", nullable: true },
+    avatar: { type: "varchar", nullable: true },
+    role: { type: "varchar", nullable: false }, 
+    status: { type: "varchar", default: "active", nullable: false },
+    userId: { type: "int", nullable: true, unique: true },
+    masterId: { type: "int", nullable: true, unique: true },
+    createdAt: { type: "timestamp", createDate: true },
+    updatedAt: { type: "timestamp", createDate: true }
+  },
+  relations: {
+    user: {
+      target: "User",
+      type: "one-to-one",
+      joinColumn: { name: "userId" },
+      onDelete: "CASCADE",
+      nullable: true
     },
-    password: {
-        type: String,
-        required: function () {
-            return !this.googleId;
-        }
-    },
-    googleId: {
-        type: String,
-        sparse: true,
-        unique: true
-    },
-    email: {
-        type: String,
-        trim: true
-    },
-    avatar: {
-        type: String
-    },
-    role: {
-        type: String,
-        enum: ["admin", "master", "user"],
-        required: true
-    },
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null
-    },
-    masterId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Master",
-        default: null
-    },
-    status: {
-        type: String,
-        enum: ["active", "inactive", "banned"],
-        default: "active"
+    master: {
+      target: "Master",
+      type: "one-to-one",
+      joinColumn: { name: "masterId" },
+      onDelete: "CASCADE",
+      nullable: true
     }
-}, { timestamps: true });
-
-module.exports = mongoose.model("Account", accountSchema);
+  }
+});

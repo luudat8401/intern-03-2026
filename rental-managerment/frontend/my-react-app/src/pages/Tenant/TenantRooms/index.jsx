@@ -51,7 +51,7 @@ export default function TenantRooms() {
               .filter(r => r.status === 'Trống')
               .map((room) => (
                 <TenantRoomCard
-                  key={room._id}
+                  key={room.id}
                   room={room}
                   onViewDetail={handleViewDetail}
                 />

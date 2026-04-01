@@ -1,5 +1,4 @@
 const yup = require("yup");
-const mongoose = require("mongoose");
 
 const roomSchema = yup.object({
   roomNumber: yup
@@ -36,25 +35,17 @@ const roomSchema = yup.object({
       }
     ),
   status: yup
-    .string()
-    .oneOf(
-      ["Trống", "Đang xử lý", "Đã thuê", "Bảo trì"],
-      "Trạng thái phòng không hợp lệ"
-    )
-    .default("Trống"),
-  masterId: yup
-    .string()
-    .required("Thiếu thông tin chủ trọ")
-    .test("is-valid-objectid", "Master ID không hợp lệ", (value) =>
-      mongoose.Types.ObjectId.isValid(value)
-    ),
-  area: yup
     .number()
-    .typeError("Diện tích phải là một số")
+    .oneOf([0, 1, 2, 3], "Trạng thái phòng không hợp lệ") // 0: Trống, 1: Đã thuê, 2: Đang xử lý, 3: Bảo trì
+    .default(0),
+  masterId: yup
+    .number()
+    .typeError("Master ID phải là số nguyên")
+    .required("Thiếu thông tin chủ trọ"),
+  area: yup
+    .string()
     .required("Diện tích là bắt buộc")
-    .positive("Diện tích phải lớn hơn 0")
-    .max(100, "Diện tích phải nhỏ hơn 100")
-    .default(20),
+    .default("20m2"),
   title: yup
     .string()
     .required("Tiêu đề là bắt buộc")

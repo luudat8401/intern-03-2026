@@ -1,7 +1,6 @@
-const Room = require("../models/Room");
-const Contract = require("../models/Contract");
-const User = require("../models/User");
+const { AppDataSource } = require("../config/db");
 const { cloudinary } = require("../config/cloudinary");
+const { In } = require("typeorm");
 
 class RoomService {
   async deleteImageFromCloudinary(imageUrl) {
@@ -23,38 +22,58 @@ class RoomService {
   }
 
   async getAllRooms() {
-    return await Room.find().populate("masterId", "name phone");
+    const roomRepo = AppDataSource.getRepository("Room");
+    return await roomRepo.find({ relations: ["master"] });
   }
 
   async getRoomsByMasterId(masterId) {
-    return await Room.find({ masterId }).populate("masterId", "name phone");
+    const roomRepo = AppDataSource.getRepository("Room");
+    return await roomRepo.find({
+      where: { masterId: parseInt(masterId) },
+      relations: ["master"]
+    });
   }
 
   async createRoom(data, file) {
+    const roomRepo = AppDataSource.getRepository("Room");
     if (file) data.thumbnail = file.path;
-    const room = new Room(data);
-    await room.save();
-    return await Room.findById(room._id).populate("masterId", "name phone");
+
+    if (data.masterId) data.masterId = parseInt(data.masterId);
+    if (data.price) data.price = parseFloat(data.price);
+    if (data.area) data.area = parseFloat(data.area);
+    if (data.capacity) data.capacity = parseInt(data.capacity);
+
+    const room = roomRepo.create(data);
+    const savedRoom = await roomRepo.save(room);
+
+    return await roomRepo.findOne({
+      where: { id: savedRoom.id },
+      relations: ["master"]
+    });
   }
 
   async updateRoom(id, data, file) {
-    const roomInfo = await Room.findById(id);
+    const roomRepo = AppDataSource.getRepository("Room");
+    const contractRepo = AppDataSource.getRepository("Contract");
+
+    const roomId = parseInt(id);
+    const roomInfo = await roomRepo.findOne({ where: { id: roomId } });
     if (!roomInfo) throw new Error("Phòng không tồn tại");
 
-    // Kiểm tra trạng thái nếu có thay đổi
-    if (data.status && data.status !== roomInfo.status) {
-      const activeContract = await Contract.findOne({
-        roomId: id,
-        status: { $in: ["active", "pending"] },
+    if (data.status !== undefined && data.status !== roomInfo.status) {
+      const activeContract = await contractRepo.findOne({
+        where: [
+          { roomId, status: 1 }, // 1: active
+          { roomId, status: 0 }  // 0: pending
+        ]
       });
 
       if (activeContract) {
-        const statusText = activeContract.status === "active" ? "đang hiệu lực" : "đang chờ duyệt";
+        const statusText = activeContract.status === 1 ? "đang hiệu lực" : "đang chờ duyệt";
         throw new Error(`Không thể thay đổi trạng thái phòng thủ công vì đang có hợp đồng ${statusText}.`);
       }
     }
 
-    // Xử lý ảnh mới
     if (file) {
       if (roomInfo.thumbnail) {
         await this.deleteImageFromCloudinary(roomInfo.thumbnail);
@@ -62,29 +81,28 @@ class RoomService {
       data.thumbnail = file.path;
     }
 
-    const updatedRoom = await Room.findByIdAndUpdate(id, data, { new: true }).populate(
-      "masterId",
-      "name phone"
-    );
-    return updatedRoom;
+    if (data.price) data.price = parseFloat(data.price);
+    if (data.area) data.area = parseFloat(data.area);
+    if (data.capacity) data.capacity = parseInt(data.capacity);
+
+    await roomRepo.update(roomId, data);
+    return await roomRepo.findOne({
+      where: { id: roomId },
+      relations: ["master"]
+    });
   }
 
   async deleteRoom(id) {
-    const roomInfo = await Room.findById(id);
+    const roomRepo = AppDataSource.getRepository("Room");
+
+    const roomId = parseInt(id);
+    const roomInfo = await roomRepo.findOne({ where: { id: roomId } });
     if (!roomInfo) throw new Error("Không thể xóa. Phòng không tồn tại");
 
     if (roomInfo.thumbnail) {
       await this.deleteImageFromCloudinary(roomInfo.thumbnail);
     }
-
-    // Xóa tất cả hợp đồng liên quan đến phòng này
-    await Contract.deleteMany({ roomId: id });
-
-    // Reset roomId cho khách thuê đang ở phòng này
-    await User.updateMany({ roomId: id }, { roomId: null });
-
-    // Xóa phòng
-    await Room.findByIdAndDelete(id);
+    await roomRepo.delete(roomId);
 
     return { message: "Đã xóa triệt để phòng, hợp đồng liên quan và rác ảnh thành công!" };
   }

@@ -21,7 +21,7 @@ export default function Masters() {
   const deleteMaster = async (id) => {
     try {
       await deleteMasterApi(id);
-      setMasters((prev) => prev.filter((m) => m._id !== id));
+      setMasters((prev) => prev.filter((m) => m.id !== id));
     } catch (err) {
       console.error(err);
     }

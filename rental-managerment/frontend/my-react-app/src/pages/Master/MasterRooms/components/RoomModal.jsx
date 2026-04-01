@@ -131,7 +131,7 @@ export default function RoomModal({ isOpen, onClose, onSave, roomData, masterId 
     if (imageFile) {
       formDataToSubmit.append('image', imageFile);
     }
-    onSave(formDataToSubmit, roomData ? roomData._id : null);
+    onSave(formDataToSubmit, roomData ? roomData.id : null);
   };
 
   const statusOptions = [

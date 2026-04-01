@@ -1,69 +1,43 @@
-const mongoose = require("mongoose");
+const { EntitySchema } = require("typeorm");
 
-const roomSchema = new mongoose.Schema({
-  roomNumber: {
-    type: String,
-    required: true,
-    unique: true
+module.exports = new EntitySchema({
+  name: "Room",
+  tableName: "rooms",
+  columns: {
+    id: { primary: true, type: "int", generated: true },
+    roomNumber: { type: "varchar", unique: true, nullable: false },
+    price: { type: "float", nullable: false },
+    status: { type: "smallint", default: 0, nullable: false }, // 0: trống, 1: đã thuê
+    capacity: { type: "smallint", default: 2, nullable: false },
+    currentTenants: { type: "smallint", default: 0, nullable: false },
+    thumbnail: { type: "varchar", nullable: false },
+    city: { type: "varchar", default: "Hồ Chí Minh", nullable: false },
+    ward: { type: "varchar", default: "Phường trung tâm", nullable: false },
+    location: { type: "varchar", nullable: false },
+    title: { type: "varchar", default: "Phòng trọ cao cấp", nullable: false },
+    district: { type: "varchar", default: "Quận trung tâm", nullable: false },
+    area: { type: "varchar", default: "20m2", nullable: false },
+    isTrending: { type: "boolean", default: false, nullable: false },
+    masterId: { type: "int", nullable: false },
+    createdAt: { type: "timestamp", createDate: true },
+    updatedAt: { type: "timestamp", updateDate: true }
   },
-  price: {
-    type: Number,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ["Trống", "Đang xử lý", "Đã thuê", "Bảo trì"],
-    default: "Trống"
-  },
-  capacity: {
-    type: Number,
-    default: 2
-  },
-  currentTenants: {
-    type: Number,
-    default: 0
-  },
-  thumbnail: {
-    type: String,
-    required: true
-  },
-  masterId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Master",
-    required: true
-  },
-  city: {
-    type: String,
-    required: true,
-    default: "Hồ Chí Minh"
-  },
-  ward: {
-    type: String,
-    required: true,
-    default: "Phường trung tâm"
-  },
-  location: {
-    type: String,
-    required: true
-  },
-  title: {
-    type: String,
-    required: true,
-    default: "Phòng trọ cao cấp"
-  },
-  district: {
-    type: String,
-    required: true,
-    default: "Quận trung tâm"
-  },
-  area: {
-    type: Number,
-    default: 20,
-    required: true
-  },
-  isTrending: {
-    type: Boolean,
-    default: false
+  relations: {
+    master: {
+      target: "Master",
+      type: "many-to-one",
+      joinColumn: { name: "masterId" },
+      onDelete: "CASCADE"
+    },
+    users: {
+      target: "User",
+      type: "one-to-many",
+      inverseSide: "room"
+    },
+    contracts: {
+      target: "Contract",
+      type: "one-to-many",
+      inverseSide: "room"
+    }
   }
-}, { timestamps: true });
-module.exports = mongoose.model("Room", roomSchema);
+});

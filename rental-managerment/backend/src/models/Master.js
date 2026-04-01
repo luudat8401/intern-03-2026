@@ -1,28 +1,56 @@
-const mongoose = require("mongoose");
+const { EntitySchema } = require("typeorm");
 
-const masterSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Tên chủ trọ là bắt buộc"],
-    trim: true
+module.exports = new EntitySchema({
+  name: "Master",
+  tableName: "masters",
+  columns: {
+    id: {
+      primary: true,
+      type: "int",
+      generated: true
+    },
+    name: {
+      type: "varchar",
+      nullable: false
+    },
+    phone: {
+      type: "varchar",
+      unique: true,
+      nullable: false
+    },
+    email: {
+      type: "varchar",
+      unique: true,
+      nullable: false
+    },
+    address: {
+      type: "varchar",
+      nullable: false
+    },
+    createdAt: {
+      type: "timestamp",
+      createDate: true
+    },
+    updatedAt: {
+      type: "timestamp",
+      updateDate: true
+    }
   },
-  phone: {
-    type: String,
-    required: [true, "Số điện thoại là bắt buộc"],
-    match: [/^[0-9]{10,11}$/, "Số điện thoại không hợp lệ (10-11 chữ số)"]
-  },
-  email: {
-    type: String,
-    required: [true, "Email là bắt buộc"],
-    match: [/^\S+@\S+\.\S+$/, "Email không đúng định dạng"],
-    lowercase: true,
-    trim: true
-  },
-  address: {
-    type: String,
-    required: [true, "Địa chỉ là bắt buộc"],
-    trim: true
+  relations: {
+    account: {
+      target: "Account",
+      type: "one-to-one",
+      inverseSide: "master"
+    },
+    rooms: {
+      target: "Room",
+      type: "one-to-many",
+      inverseSide: "master"
+    },
+    contracts: {
+      target: "Contract",
+      type: "one-to-many",
+      inverseSide: "master"
+    }
   }
-}, { timestamps: true });
-
-module.exports = mongoose.model("Master", masterSchema);
+});

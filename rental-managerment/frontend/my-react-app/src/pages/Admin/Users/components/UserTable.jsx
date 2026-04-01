@@ -14,7 +14,7 @@ export default function UserTable({ users, deleteUser, onEdit }) {
 
                 <tbody>
                     {users.map(user => (
-                        <tr key={user._id} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'default' }}>
+                        <tr key={user.id} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'default' }}>
                             <td style={{ padding: '16px', fontWeight: '500', color: '#0f172a' }}>{user.name}</td>
                             <td style={{ padding: '16px', color: '#475569' }}>{user.phone}</td>
 
@@ -40,7 +40,7 @@ export default function UserTable({ users, deleteUser, onEdit }) {
                                 </button>
                                 <button
                                     className="btn-delete"
-                                    onClick={() => deleteUser(user._id)}
+                                    onClick={() => deleteUser(user.id)}
                                     style={{ backgroundColor: '#ef4444', color: '#fff', padding: '8px 14px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', transition: 'all 0.2s' }}
                                 >
                                     Xóa

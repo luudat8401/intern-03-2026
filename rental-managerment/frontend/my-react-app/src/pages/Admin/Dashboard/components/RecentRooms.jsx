@@ -18,7 +18,7 @@ const RecentRooms = React.memo(({ rooms }) => {
         </thead>
         <tbody>
           {lastFiveRooms.map((room) => (
-            <tr key={room._id}>
+            <tr key={room.id}>
               <td>Phòng {room.roomNumber}</td>
               <td>{room.price?.toLocaleString()}</td>
               <td style={{ color: room.status === "Đã thuê" ? "#ef4444" : "#10b981", fontWeight: "600" }}>

@@ -1,58 +1,78 @@
-const User = require("../models/User");
-const Room = require("../models/Room");
-const Account = require("../models/Account");
-const Contract = require("../models/Contract");
+const { AppDataSource } = require("../config/db");
+const { In } = require("typeorm");
 
 class UserService {
   async createUser(data) {
-    const { roomId } = data;
-    if (roomId) {
-      const roomExists = await Room.findById(roomId);
+    const userRepo = AppDataSource.getRepository("User");
+    const roomRepo = AppDataSource.getRepository("Room");
+
+    if (data.roomId) {
+      data.roomId = parseInt(data.roomId);
+      const roomExists = await roomRepo.findOne({ where: { id: data.roomId } });
       if (!roomExists) throw new Error("Phòng không tồn tại");
     }
 
-    const user = new User(data);
-    await user.save();
-    return await User.findById(user._id).populate("roomId", "roomNumber");
+    const user = userRepo.create(data);
+    const savedUser = await userRepo.save(user);
+
+    return await userRepo.findOne({
+      where: { id: savedUser.id },
+      relations: ["room"]
+    });
   }
 
   async getAllUsers() {
-    return await User.find().populate("roomId", "roomNumber status");
+    const userRepo = AppDataSource.getRepository("User");
+    return await userRepo.find({ relations: ["room"] });
   }
 
   async getUserById(id) {
-    const user = await User.findById(id).populate("roomId", "roomNumber status");
+    const userRepo = AppDataSource.getRepository("User");
+    const user = await userRepo.findOne({
+      where: { id: parseInt(id) },
+      relations: ["room"]
+    });
     if (!user) throw new Error("Người dùng không tồn tại");
     return user;
   }
 
   async updateUser(id, data) {
-    const updatedUser = await User.findByIdAndUpdate(id, data, { new: true }).populate(
-      "roomId",
-      "roomNumber"
-    );
+    const userRepo = AppDataSource.getRepository("User");
+    const userId = parseInt(id);
+
+    if (data.roomId) data.roomId = parseInt(data.roomId);
+
+    await userRepo.update(userId, data);
+    const updatedUser = await userRepo.findOne({
+      where: { id: userId },
+      relations: ["room"]
+    });
+
     if (!updatedUser) throw new Error("Không tìm thấy người dùng để cập nhật");
     return updatedUser;
   }
 
   async deleteUser(id) {
-    // Tìm các hợp đồng đang hiệu lực của khách thuê này để giải phóng phòng
-    const activeContracts = await Contract.find({ userId: id, status: "active" });
+    const userRepo = AppDataSource.getRepository("User");
+    const contractRepo = AppDataSource.getRepository("Contract");
+    const roomRepo = AppDataSource.getRepository("Room");
+    const userId = parseInt(id);
+
+    // Xử lý status phòng cho các hợp đồng active trước khi user bị CASCADE
+    const activeContracts = await contractRepo.find({
+      where: { userId: userId, status: "active" }
+    });
+
     const roomIds = activeContracts.map((c) => c.roomId);
 
     if (roomIds.length > 0) {
-      await Room.updateMany({ _id: { $in: roomIds } }, { status: "Trống" });
+      // TypeORM's update won't accept an array in the first param unless using criteria object
+      await roomRepo.update({ id: In(roomIds) }, { status: "Trống" });
     }
 
-    // Xóa tất cả hợp đồng của khách thuê này
-    await Contract.deleteMany({ userId: id });
-
-    // Xóa tài khoản đăng nhập
-    await Account.deleteOne({ userId: id });
-
-    // Xóa hồ sơ khách thuê
-    const result = await User.findByIdAndDelete(id);
-    if (!result) throw new Error("Không tìm thấy khách thuê để xóa");
+    // PostgreSQL tự xóa Contract và Account (ON DELETE CASCADE)
+    const result = await userRepo.delete(userId);
+    if (result.affected === 0) throw new Error("Không tìm thấy khách thuê để xóa");
 
     return { message: "Đã xóa toàn bộ dữ liệu liên quan đến khách thuê và giải phóng phòng thành công!" };
   }

@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./config/db");
+const { connectDB } = require("./config/db");
 const { verifyToken } = require("./middleware/auth.middleware");
 
 const app = express();
@@ -15,7 +15,7 @@ app.use("/rooms", verifyToken, require("./routes/room.routes"));
 app.use("/contracts", verifyToken, require("./routes/contract.routes"));
 
 app.get("/", (req, res) => {
-  res.send("Server running and connected to MongoDB");
+  res.send("Server running and connected to PostgreSQL (TypeORM)");
 });
 
 module.exports = app;

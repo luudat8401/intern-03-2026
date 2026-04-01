@@ -16,7 +16,7 @@ export default function ContractTable({ contracts, deleteContract, onEdit }) {
                 </thead>
                 <tbody>
                     {contracts.map(contract => (
-                        <tr key={contract._id}>
+                        <tr key={contract.id}>
                             {/* Nhờ populate, userId đã là object { name, phone, isRepresentative } */}
                             <td style={{ fontWeight: '500' }}>
                                 {contract.userId?.isRepresentative && <span style={{color: '#f59e0b', marginRight: '4px'}}>⭐</span>}
@@ -43,7 +43,7 @@ export default function ContractTable({ contracts, deleteContract, onEdit }) {
                                 </button>
                                 <button
                                     className="btn-delete"
-                                    onClick={() => deleteContract(contract._id)}
+                                    onClick={() => deleteContract(contract.id)}
                                 >
                                     Xóa
                                 </button>

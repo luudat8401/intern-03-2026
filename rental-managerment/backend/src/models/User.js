@@ -1,29 +1,62 @@
-const mongoose = require("mongoose");
+const { EntitySchema } = require("typeorm");
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Tên người thuê là bắt buộc"],
-    trim: true
+module.exports = new EntitySchema({
+  name: "User",
+  tableName: "users",
+  columns: {
+    id: {
+      primary: true,
+      type: "int",
+      generated: true
+    },
+    name: {
+      type: "varchar",
+      nullable: false
+    },
+    phone: {
+      type: "varchar",
+      nullable: false
+    },
+    isRepresentative: {
+      type: "boolean",
+      default: false,
+      nullable: false
+    },
+    status: {
+      type: "smallint",
+      default: 0, // 0: active, 1: inactive
+      nullable: false
+    },
+    roomId: {
+      type: "int",
+      nullable: true
+    },
+    createdAt: {
+      type: "timestamp",
+      createDate: true
+    },
+    updatedAt: {
+      type: "timestamp",
+      updateDate: true
+    }
   },
-  phone: {
-    type: String,
-    required: [true, "Số điện thoại là bắt buộc"],
-    match: [/^[0-9]{10,11}$/, "Số điện thoại không hợp lệ (10-11 chữ số)"]
-  },
-  roomId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Room"
-  },
-  isRepresentative: {
-    type: Boolean,
-    default: false
-  },
-  status: {
-    type: String,
-    enum: ["active", "inactive"],
-    default: "active"
+  relations: {
+    room: {
+      target: "Room",
+      type: "many-to-one",
+      joinColumn: { name: "roomId" },
+      onDelete: "SET NULL",
+      nullable: true
+    },
+    account: {
+      target: "Account",
+      type: "one-to-one",
+      inverseSide: "user"
+    },
+    contracts: {
+      target: "Contract",
+      type: "one-to-many",
+      inverseSide: "user"
+    }
   }
-}, { timestamps: true });
-
-module.exports = mongoose.model("User", userSchema);
+});

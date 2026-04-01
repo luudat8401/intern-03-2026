@@ -20,7 +20,7 @@ export default function Rooms() {
     const deleteRoom = async (id) => {
         try {
             await deleteRoomApi(id);
-            setRooms(rooms.filter(r => r._id !== id));
+            setRooms(rooms.filter(r => r.id !== id));
         } catch (error) {
             console.error("Lỗi xóa phòng", error);
         }

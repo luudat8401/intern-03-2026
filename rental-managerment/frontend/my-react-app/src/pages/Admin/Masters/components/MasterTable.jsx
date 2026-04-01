@@ -16,14 +16,14 @@ export default function MasterTable({ masters, deleteMaster }) {
 
         <tbody>
           {masters.map((master) => (
-            <tr key={master._id}>
+            <tr key={master.id}>
               <td>{master.name}</td>
               <td>{master.phone}</td>
               <td>{master.email}</td>
               <td>{master.address}</td>
 
               <td>
-                <button onClick={() => deleteMaster(master._id)} style={{ padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', border: 'none', backgroundColor: '#ef4444', color: '#fff' }}>
+                <button onClick={() => deleteMaster(master.id)} style={{ padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', border: 'none', backgroundColor: '#ef4444', color: '#fff' }}>
                   Xóa
                 </button>
               </td>

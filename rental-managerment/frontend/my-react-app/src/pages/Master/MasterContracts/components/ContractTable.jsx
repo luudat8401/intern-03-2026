@@ -26,7 +26,7 @@ const ContractTable = ({ contracts, onAction }) => {
         <tbody>
           {contracts.map((contract) => (
             <ContractRow 
-              key={contract._id} 
+              key={contract.id} 
               contract={contract} 
               onAction={onAction} 
             />

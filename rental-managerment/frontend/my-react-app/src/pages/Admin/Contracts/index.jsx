@@ -19,7 +19,7 @@ export default function Contracts() {
     const deleteContract = async (id) => {
         try {
             await deleteContractApi(id);
-            setContracts(prev => prev.filter(c => c._id !== id));
+            setContracts(prev => prev.filter(c => c.id !== id));
         } catch (err) {
             console.error(err);
         }

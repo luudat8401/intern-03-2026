@@ -22,7 +22,7 @@ const ContractRow = ({ contract, onDelete }) => {
         {contract.status === 'pending' && (
           <button 
             className="btn-text-danger" 
-            onClick={() => onDelete(contract._id)}
+            onClick={() => onDelete(contract.id)}
           >
             Hủy yêu cầu
           </button>

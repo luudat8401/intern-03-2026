@@ -27,13 +27,13 @@ const ContractRow = ({ contract, onAction }) => {
             <>
               <button 
                 className="btn-approve"
-                onClick={() => onAction(contract._id, 'active', 'Bạn có chắc muốn duyêt hợp đồng này thành Active?')}
+                onClick={() => onAction(contract.id, 'active', 'Bạn có chắc muốn duyêt hợp đồng này thành Active?')}
               >
                 Duyệt
               </button>
               <button 
                 className="btn-decline"
-                onClick={() => onAction(contract._id, 'decline', 'Bạn có chắc muốn từ chối yêu cầu này?')}
+                onClick={() => onAction(contract.id, 'decline', 'Bạn có chắc muốn từ chối yêu cầu này?')}
               >
                 Từ chối
               </button>
@@ -42,7 +42,7 @@ const ContractRow = ({ contract, onAction }) => {
           {contract.status === 'active' && (
             <button 
               className="btn-cancel-contract"
-              onClick={() => onAction(contract._id, 'cancelled', 'Bạn có chắc muốn hủy hợp đồng này? Phòng sẽ quay về trạng thái Trống.')}
+              onClick={() => onAction(contract.id, 'cancelled', 'Bạn có chắc muốn hủy hợp đồng này? Phòng sẽ quay về trạng thái Trống.')}
             >
               Hủy HĐ
             </button>

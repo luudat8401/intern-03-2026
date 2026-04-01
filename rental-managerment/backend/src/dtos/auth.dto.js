@@ -45,16 +45,16 @@ const googleSchema = yup.object({
 
 class AuthDTO {
   static loginResponse(account, token) {
-    const profileId = account.role === "master" ? account.masterId?._id : account.userId?._id;
+    const profileId = account.role === "master" ? account.master?.id : account.user?.id;
     const profileName =
-      account.role === "master" && account.masterId
-        ? account.masterId.name
-        : account.role === "user" && account.userId
-          ? account.userId.name
+      account.role === "master" && account.master
+        ? account.master.name
+        : account.role === "user" && account.user
+          ? account.user.name
           : account.username;
 
     const userData = {
-      id: account._id,
+      id: account.id,
       username: account.username,
       role: account.role,
       name: profileName,

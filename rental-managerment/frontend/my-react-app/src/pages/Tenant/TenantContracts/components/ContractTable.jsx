@@ -26,7 +26,7 @@ const ContractTable = ({ contracts, onDelete }) => {
         <tbody>
           {contracts.map((contract) => (
             <ContractRow 
-              key={contract._id} 
+              key={contract.id} 
               contract={contract} 
               onDelete={onDelete} 
             />

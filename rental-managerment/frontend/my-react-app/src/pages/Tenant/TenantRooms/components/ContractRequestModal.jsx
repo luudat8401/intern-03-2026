@@ -20,7 +20,7 @@ export default function ContractRequestModal({ room, onClose, onSuccess }) {
     try {
       setLoading(true);
       const payload = {
-        roomId: room._id,
+        roomId: room.id,
         price: room.price,
         startDate: formData.startDate,
         endDate: formData.endDate,

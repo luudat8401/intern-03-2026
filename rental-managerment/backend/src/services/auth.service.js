@@ -1,6 +1,4 @@
-const Account = require("../models/Account");
-const User = require("../models/User");
-const Master = require("../models/Master");
+const { AppDataSource } = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const authDto = require("../dtos/auth.dto");
@@ -15,7 +13,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 class AuthService {
   async register({ username, password, role, name, phone, email, address }) {
-    const existingAccount = await Account.findOne({ username });
+    const accountRepo = AppDataSource.getRepository("Account");
+    const masterRepo = AppDataSource.getRepository("Master");
+    const userRepo = AppDataSource.getRepository("User");
+
+    const existingAccount = await accountRepo.findOne({ where: { username } });
     if (existingAccount) {
       throw new Error("Tên đăng nhập đã tồn tại");
     }
@@ -27,24 +29,24 @@ class AuthService {
     let masterId = null;
 
     if (role === "master") {
-      const master = new Master({
+      const master = masterRepo.create({
         name: name || username,
         phone: phone || "0000000000",
         email: email || "temp@mail.com",
         address: address || "Chưa cập nhật",
       });
-      await master.save();
-      masterId = master._id;
+      const savedMaster = await masterRepo.save(master);
+      masterId = savedMaster.id;
     } else if (role === "user") {
-      const user = new User({
+      const user = userRepo.create({
         name: name || username,
         phone: phone || "0000000000",
       });
-      await user.save();
-      userId = user._id;
+      const savedUser = await userRepo.save(user);
+      userId = savedUser.id;
     }
 
-    const account = new Account({
+    const account = accountRepo.create({
       username,
       password: hashedPassword,
       role,
@@ -52,14 +54,16 @@ class AuthService {
       masterId,
     });
 
-    await account.save();
+    await accountRepo.save(account);
     return { message: "Đăng ký thành công!" };
   }
 
   async login(username, password) {
-    const account = await Account.findOne({ username })
-      .populate("userId", "name")
-      .populate("masterId", "name");
+    const accountRepo = AppDataSource.getRepository("Account");
+    const account = await accountRepo.findOne({ 
+      where: { username },
+      relations: ["user", "master"]
+    });
 
     if (!account) {
       throw new Error("Tài khoản không tồn tại");
@@ -70,17 +74,12 @@ class AuthService {
       throw new Error("Mật khẩu không chính xác");
     }
 
-    const profileId = account.role === "master" ? account.masterId?._id : account.userId?._id;
-    const profileName =
-      account.role === "master" && account.masterId
-        ? account.masterId.name
-        : account.role === "user" && account.userId
-          ? account.userId.name
-          : account.username;
-
+    const profileId = account.role === "master" ? account.masterId : account.userId;
+    
+    // Tạo token payload
     const token = jwt.sign(
       {
-        id: account._id,
+        id: account.id,
         role: account.role,
         profileId: profileId,
       },
@@ -92,6 +91,10 @@ class AuthService {
   }
 
   async googleLogin(credential, role) {
+    const accountRepo = AppDataSource.getRepository("Account");
+    const masterRepo = AppDataSource.getRepository("Master");
+    const userRepo = AppDataSource.getRepository("User");
+
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
       audience: GOOGLE_CLIENT_ID,
@@ -99,12 +102,15 @@ class AuthService {
     const payload = ticket.getPayload();
     const { sub: googleId, email, name, picture } = payload;
 
-    // Tìm xem email này hoặc googleId này đã tồn tại chưa
-    let account = await Account.findOne({ $or: [{ googleId }, { email }] })
-      .populate("userId", "name")
-      .populate("masterId", "name");
+    // Tìm bằng googleId hoặc email. TypeORM query syntax $or is array of objects
+    let account = await accountRepo.findOne({ 
+      where: [
+        { googleId },
+        { email }
+      ],
+      relations: ["user", "master"]
+    });
 
-    // Thay thế role nếu là account mới chưa tồn tại
     const finalRole = role || "user";
 
     if (!account) {
@@ -115,25 +121,25 @@ class AuthService {
       const username = baseUsername + "_" + googleId.substring(0, 4);
 
       if (finalRole === "master") {
-        const master = new Master({
+        const master = masterRepo.create({
           name: name,
           phone: "0000000000",
           email: email,
           address: "Chưa cập nhật",
         });
-        await master.save();
-        masterId = master._id;
+        const savedMaster = await masterRepo.save(master);
+        masterId = savedMaster.id;
       } else {
-        const user = new User({
+        const user = userRepo.create({
           name: name,
           phone: "0000000000",
         });
-        await user.save();
-        userId = user._id;
+        const savedUser = await userRepo.save(user);
+        userId = savedUser.id;
       }
 
-      account = new Account({
-        username: username, // Tạo username tự động (unique)
+      const newAccount = accountRepo.create({
+        username: username,
         googleId,
         email,
         avatar: picture,
@@ -142,24 +148,27 @@ class AuthService {
         masterId,
       });
 
-      await account.save();
-      // Populate fields để map đúng format response
-      if (userId) await account.populate("userId", "name");
-      if (masterId) await account.populate("masterId", "name");
+      account = await accountRepo.save(newAccount);
+      
+      // Reload relations
+      account = await accountRepo.findOne({
+        where: { id: account.id },
+        relations: ["user", "master"]
+      });
     } else {
-      // Nếu email đã tồn tại nhưng chưa có googleId thì cập nhật cho account đó
       if (!account.googleId) {
         account.googleId = googleId;
         account.avatar = picture;
-        await account.save();
+        await accountRepo.save(account);
       }
     }
 
+    const profileId = account.role === "master" ? account.masterId : account.userId;
     const token = jwt.sign(
       {
-        id: account._id,
+        id: account.id,
         role: account.role,
-        profileId: account.role === "master" ? account.masterId?._id : account.userId?._id,
+        profileId: profileId,
       },
       JWT_SECRET,
       { expiresIn: "1d" }
