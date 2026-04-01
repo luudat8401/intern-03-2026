@@ -12,8 +12,14 @@ class RoomController {
 
   async getRoomsByMasterId(req, res) {
     try {
-      const rooms = await roomService.getRoomsByMasterId(req.params.masterId);
-      res.json(rooms);
+      const { page, limit, status } = req.query;
+      const result = await roomService.getRoomsByMasterId(
+        req.params.masterId,
+        page,
+        limit,
+        status
+      );
+      res.json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
@@ -34,14 +40,13 @@ class RoomController {
     }
   }
 
-
   async updateRoom(req, res) {
     try {
       const updatedRoom = await roomService.updateRoom(req.params.id, req.body, req.file);
       res.json(updatedRoom);
     } catch (err) {
-      const statusCode = err.message === "Phòng không tồn tại" ? 404 : 
-                        err.message.includes("Không thể thay đổi trạng thái") ? 400 : 500;
+      const statusCode = err.message === "Phòng không tồn tại" ? 404 :
+        err.message.includes("Không thể thay đổi trạng thái") ? 400 : 500;
       res.status(statusCode).json({ error: err.message });
     }
   }

@@ -1,7 +1,7 @@
 import axios from "./axiosClient";
 
 export const getRooms = () => axios.get("/rooms");
-export const getRoomsByMaster = (masterId) => axios.get(`/rooms/master/${masterId}`);
+export const getRoomsByMaster = (masterId, params) => axios.get(`/rooms/master/${masterId}`, { params });
 export const createRoom = (formData) => axios.post("/rooms", formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
 });

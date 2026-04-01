@@ -36,18 +36,17 @@ export default function MasterProfile() {
           <AccountCircleIcon />
         </div>
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Hồ sơ Quản trị viên</h2>
-          <p className="text-slate-400 font-bold tracking-tight uppercase text-[10px]">Cập nhật thông tin nhận dạng của chủ trọ</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Hồ sơ chủ trọ</h2>
         </div>
       </div>
 
       {loading && (
         <div className="py-20 flex flex-col items-center gap-4">
-           <div className="w-10 h-10 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
-           <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center">Đang tải hồ sơ từ máy chủ...</p>
+          <div className="w-10 h-10 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center">Đang tải hồ sơ từ máy chủ...</p>
         </div>
       )}
-      
+
       {error && (
         <div className="bg-rose-50 border border-rose-100 p-6 rounded-3xl text-rose-600 font-bold text-sm text-center mb-8">
           ❌ {error}

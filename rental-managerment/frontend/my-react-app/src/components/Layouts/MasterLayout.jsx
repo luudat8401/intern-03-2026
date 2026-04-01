@@ -43,7 +43,7 @@ export default function MasterLayout() {
 
       <div className="flex-1 ml-64 flex flex-col min-h-screen relative">
         {/* Simple Header */}
-        <header className="h-20 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-40 shadow-sm shadow-slate-100">
+        <header className="h-20 bg-white border-b border-slate-200 px-10 flex items-center justify-between sticky top-0 z-40 shadow-sm shadow-slate-100">
 
           {/* Header Search Area */}
           <div className="relative w-full max-w-lg hidden md:block">
@@ -117,8 +117,6 @@ export default function MasterLayout() {
             </div>
           </div>
         </header>
-
-        {/* Dynamic Page Content */}
         <main className="p-10 flex-1 overflow-auto">
           <Outlet />
         </main>

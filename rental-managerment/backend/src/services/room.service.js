@@ -26,12 +26,53 @@ class RoomService {
     return await roomRepo.find({ relations: ["master"] });
   }
 
-  async getRoomsByMasterId(masterId) {
+  async getRoomsByMasterId(masterId, page, limit, status) {
     const roomRepo = AppDataSource.getRepository("Room");
-    return await roomRepo.find({
-      where: { masterId: parseInt(masterId) },
-      relations: ["master"]
+    
+    // Parse query params (Ensure they are treated as Numbers)
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
+    const take = limitNum;
+    
+    // Build where condition
+    const where = { masterId: parseInt(masterId) };
+    if (status !== 'all') {
+      where.status = parseInt(status);
+    }
+
+    const [rooms, total] = await roomRepo.findAndCount({
+      where,
+      relations: ["master"],
+      order: { id: "DESC" }, // Newest first
+      skip,
+      take
     });
+
+    // Get full stats for the whole inventory (ignoring pagination and status filter)
+    const masterWhere = { masterId: parseInt(masterId) };
+    const [totalAll, occupied, vacant, pending, maintenance] = await Promise.all([
+      roomRepo.count({ where: masterWhere }),
+      roomRepo.count({ where: { ...masterWhere, status: 1 } }),
+      roomRepo.count({ where: { ...masterWhere, status: 0 } }),
+      roomRepo.count({ where: { ...masterWhere, status: 2 } }),
+      roomRepo.count({ where: { ...masterWhere, status: 3 } }),
+    ]);
+
+    return {
+      rooms,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(total / take),
+      stats: {
+        total: totalAll,
+        occupied,
+        vacant,
+        pending,
+        maintenance
+      }
+    };
   }
 
   async createRoom(data, file) {
