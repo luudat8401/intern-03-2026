@@ -16,16 +16,36 @@ module.exports = new EntitySchema({
     phone: {
       type: "varchar",
       unique: true,
-      nullable: false
+      nullable: true
     },
     email: {
       type: "varchar",
       unique: true,
-      nullable: false
+      nullable: true
     },
     address: {
       type: "varchar",
-      nullable: false
+      nullable: true
+    },
+    bankName: {
+      type: "varchar",
+      nullable: true
+    },
+    bankAccountNumber: {
+      type: "varchar",
+      nullable: true
+    },
+    bankAccountHolder: {
+      type: "varchar",
+      nullable: true
+    },
+    bankBranch: {
+      type: "varchar",
+      nullable: true
+    },
+    avatar: {
+      type: "varchar",
+      nullable: true
     },
     createdAt: {
       type: "timestamp",

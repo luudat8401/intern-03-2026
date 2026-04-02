@@ -14,7 +14,11 @@ const AppDataSource = new DataSource({
     require("../models/Contract")
   ],
   migrations: [
-    require("../migrations/1711872000000-InitialSchema")
+    require("../migrations/1711872000000-InitialSchema"),
+    require("../migrations/1711874000000-AddBankInfoToMaster"),
+    require("../migrations/1711876000000-AddAvatarToMaster"),
+    require("../migrations/1711877000000-FixMasterConstraints"),
+    require("../migrations/1711878000000-AddProfileFieldsToUser")
   ],
   migrationsRun: true,
 });

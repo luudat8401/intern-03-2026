@@ -5,51 +5,30 @@ import ProfileView from '../MasterDashboard/components/ProfileView';
 import { getMaster } from "../../../api/master.api";
 import ProfileForm from '../MasterDashboard/components/ProfileForm';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Toast from "../../../components/Common/Toast";
 
 export default function MasterProfile() {
   const { userProfile: user, loading, errorCtx: error, updateProfileContext } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-
-  const handleSave = async (updatedData) => {
-    try {
-      await updateMasterApi(user.id, updatedData);
-      updateProfileContext(updatedData);
-      setIsEditing(false);
-    } catch (err) {
-      alert("Cập nhật thông tin thất bại: " + (err.response?.data?.error || err.message));
-    }
+  const [successOpen, setSuccessOpen] = useState(false);
+  const handleSave = (updatedMaster) => {
+    setSuccessOpen(true);
+    setIsEditing(false);
   };
 
-  const handleGetMaster = async () => {
-    try {
-      const master = await getMaster(user);
-      console.log(master);
-    } catch {
-      console.log("Error fetching master")
-    }
-  }
-
   return (
-    <div className="bg-white p-12 rounded-[48px] border border-slate-100 shadow-2xl shadow-slate-200/40 max-w-4xl mx-auto animate-in zoom-in duration-500">
-      <div className="flex items-center gap-4 mb-10">
-        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-          <AccountCircleIcon />
-        </div>
-        <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Hồ sơ chủ trọ</h2>
-        </div>
-      </div>
-
-      {loading && (
-        <div className="py-20 flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
-          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest text-center">Đang tải hồ sơ từ máy chủ...</p>
-        </div>
-      )}
+    <div className="animate-in fade-in duration-1000">
+      <Toast
+        open={successOpen}
+        onClose={() => setSuccessOpen(false)}
+        message="Cập nhật thông tin hồ sơ thành công!"
+      />
 
       {error && (
-        <div className="bg-rose-50 border border-rose-100 p-6 rounded-3xl text-rose-600 font-bold text-sm text-center mb-8">
-          ❌ {error}
+        <div className="bg-rose-50 border-2 border-rose-100 p-8 rounded text-rose-600 font-bold text-center mb-10 shadow-lg shadow-rose-500/10 max-w-2xl mx-auto">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h3 className="text-xl mb-2">Đã xảy ra lỗi</h3>
+          <p className="opacity-80 font-medium">{error}</p>
         </div>
       )}
 
@@ -65,7 +44,6 @@ export default function MasterProfile() {
             <ProfileView
               user={user}
               onEdit={() => setIsEditing(true)}
-              onGetMaster={handleGetMaster}
             />
           )}
         </React.Fragment>

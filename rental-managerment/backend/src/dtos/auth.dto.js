@@ -43,6 +43,15 @@ const googleSchema = yup.object({
   role: yup.string().oneOf(["admin", "master", "user"]).default("user")
 });
 
+const changePasswordSchema = yup.object({
+  oldPassword: yup.string().required("Vui lòng nhập mật khẩu cũ"),
+  newPassword: yup
+    .string()
+    .required("Vui lòng nhập mật khẩu mới")
+    .min(6, "Mật khẩu mới ít nhất 6 ký tự")
+    .matches(/^\S+$/, "Mật khẩu không được chứa khoảng trắng"),
+});
+
 class AuthDTO {
   static loginResponse(account, token) {
     const profileId = account.role === "master" ? account.master?.id : account.user?.id;
@@ -85,6 +94,13 @@ class AuthDTO {
 
   static async googleRequest(data) {
     return await googleSchema.validate(data, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+  }
+
+  static async changePasswordRequest(data) {
+    return await changePasswordSchema.validate(data, {
       abortEarly: false,
       stripUnknown: true,
     });

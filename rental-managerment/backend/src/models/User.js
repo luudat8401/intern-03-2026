@@ -31,6 +31,18 @@ module.exports = new EntitySchema({
       type: "int",
       nullable: true
     },
+    email: {
+      type: "varchar",
+      nullable: true
+    },
+    address: {
+      type: "varchar",
+      nullable: true
+    },
+    avatar: {
+      type: "varchar",
+      nullable: true
+    },
     createdAt: {
       type: "timestamp",
       createDate: true

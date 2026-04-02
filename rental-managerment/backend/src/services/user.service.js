@@ -1,7 +1,26 @@
 const { AppDataSource } = require("../config/db");
+const { cloudinary } = require("../config/cloudinary");
 const { In } = require("typeorm");
 
 class UserService {
+  async deleteImageFromCloudinary(imageUrl) {
+    if (!imageUrl) return;
+    try {
+      const arr = imageUrl.split("/");
+      const uploadIndex = arr.indexOf("upload");
+      if (uploadIndex !== -1) {
+        const pathArr = arr.slice(uploadIndex + 2);
+        const fullPath = pathArr.join("/");
+        const publicId = fullPath.substring(0, fullPath.lastIndexOf("."));
+
+        await cloudinary.uploader.destroy(publicId);
+        console.log(`[Cloudinary] Đã xóa ảnh cũ của user: ${publicId}`);
+      }
+    } catch (err) {
+      console.error("[Cloudinary Error] Lỗi dọn rác ảnh user:", err.message);
+    }
+  }
+
   async createUser(data) {
     const userRepo = AppDataSource.getRepository("User");
     const roomRepo = AppDataSource.getRepository("Room");
@@ -36,11 +55,21 @@ class UserService {
     return user;
   }
 
-  async updateUser(id, data) {
+  async updateUser(id, data, file) {
     const userRepo = AppDataSource.getRepository("User");
     const userId = parseInt(id);
 
+    const userInfo = await userRepo.findOne({ where: { id: userId } });
+    if (!userInfo) throw new Error("Không tìm thấy người dùng để cập nhật");
+
     if (data.roomId) data.roomId = parseInt(data.roomId);
+
+    if (file) {
+      if (userInfo.avatar) {
+        await this.deleteImageFromCloudinary(userInfo.avatar);
+      }
+      data.avatar = file.path;
+    }
 
     await userRepo.update(userId, data);
     const updatedUser = await userRepo.findOne({
@@ -48,7 +77,6 @@ class UserService {
       relations: ["room"]
     });
 
-    if (!updatedUser) throw new Error("Không tìm thấy người dùng để cập nhật");
     return updatedUser;
   }
 
@@ -58,6 +86,11 @@ class UserService {
     const roomRepo = AppDataSource.getRepository("Room");
     const userId = parseInt(id);
 
+    const userInfo = await userRepo.findOne({ where: { id: userId } });
+    if (userInfo && userInfo.avatar) {
+      await this.deleteImageFromCloudinary(userInfo.avatar);
+    }
+
     // Xử lý status phòng cho các hợp đồng active trước khi user bị CASCADE
     const activeContracts = await contractRepo.find({
       where: { userId: userId, status: "active" }
@@ -66,11 +99,9 @@ class UserService {
     const roomIds = activeContracts.map((c) => c.roomId);
 
     if (roomIds.length > 0) {
-      // TypeORM's update won't accept an array in the first param unless using criteria object
       await roomRepo.update({ id: In(roomIds) }, { status: "Trống" });
     }
 
-    // PostgreSQL tự xóa Contract và Account (ON DELETE CASCADE)
     const result = await userRepo.delete(userId);
     if (result.affected === 0) throw new Error("Không tìm thấy khách thuê để xóa");
 

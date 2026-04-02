@@ -31,9 +31,9 @@ class AuthService {
     if (role === "master") {
       const master = masterRepo.create({
         name: name || username,
-        phone: phone || "0000000000",
-        email: email || "temp@mail.com",
-        address: address || "Chưa cập nhật",
+        phone: phone || null,
+        email: email || null,
+        address: address || null,
       });
       const savedMaster = await masterRepo.save(master);
       masterId = savedMaster.id;
@@ -175,6 +175,30 @@ class AuthService {
     );
 
     return authDto.loginResponse(account, token);
+  }
+
+  async changePassword(accountId, oldPassword, newPassword) {
+    const accountRepo = AppDataSource.getRepository("Account");
+    const account = await accountRepo.findOne({ where: { id: parseInt(accountId) } });
+
+    if (!account) {
+      throw new Error("Tài khoản không tồn tại");
+    }
+
+    if (account.password) {
+      const isMatch = await bcrypt.compare(oldPassword, account.password);
+      if (!isMatch) {
+        throw new Error("Mật khẩu cũ không chính xác");
+      }
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    
+    account.password = hashedPassword;
+    await accountRepo.save(account);
+
+    return { message: "Đổi mật khẩu thành công!" };
   }
 }
 

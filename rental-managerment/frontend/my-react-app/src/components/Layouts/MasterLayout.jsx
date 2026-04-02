@@ -117,7 +117,7 @@ export default function MasterLayout() {
             </div>
           </div>
         </header>
-        <main className="p-10 flex-1 overflow-auto">
+        <main className="pt-10 pl-8 pr-10 pb-10 flex-1 overflow-auto">
           <Outlet />
         </main>
       </div>

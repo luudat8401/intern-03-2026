@@ -14,7 +14,7 @@ export const roomSchema = yup.object({
         .required("Thành phố là bắt buộc")
         .trim()
         .min(1, "Thành phố không được để trống")
-        .max(20, "Thành phố không được vượt quá 20 ký tự"),
+        .max(100, "Thành phố không được vượt quá 100 ký tự"),
     ward: yup
         .string()
         .required("Phường là bắt buộc")

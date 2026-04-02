@@ -1,68 +1,124 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { tenantProfileSchema } from '../../../../schemas/tenant.schema';
+import { tenantProfileSchema } from '../../../../schemas/ProfileSchema';
+import PersonalInfoSection from '../../../../components/Common/Profile/PersonalInfoSection';
+import SecuritySection from '../../../../components/Common/Profile/SecuritySection';
+import { updateUserApi } from '../../../../api/user.api';
+import { changePasswordApi } from '../../../../api/auth.api';
+import { useAuth } from '../../../../context/AuthContext';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function ProfileForm({ user, onSave, onCancel }) {
+  const { updateProfileContext } = useAuth();
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [generalError, setGeneralError] = useState("");
 
-  const { register, handleSubmit, setValue, trigger, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(tenantProfileSchema),
     defaultValues: {
-      name: user?.name || '',
-      phone: user?.phone || '',
+      name: user?.name,
+      phone: user?.phone,
+      email: user?.email,
+      address: user?.address,
     },
   });
 
-  const onInvalid = async (errors) => {
-    setGeneralError("Thông tin nhập vào không hợp lệ. Vui lòng kiểm tra lại!");
-    Object.keys(errors).forEach((field) => {
-      setValue(field, "");
-    });
-    await trigger();
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
   };
 
-  const onSubmit = (data) => {
-    setGeneralError("");
-    onSave(data);
+  const onSubmit = async (data) => {
+    try {
+      setIsSubmitting(true);
+      setGeneralError("");
+
+      const formData = new FormData();
+      Object.keys(data).forEach(key => {
+        if (!['oldPassword', 'newPassword', 'confirmNewPassword', 'avatar'].includes(key)) {
+           formData.append(key, data[key]);
+        }
+      });
+      
+      if (avatarFile) {
+        formData.append("image", avatarFile);
+      }
+
+      // Update Tenant Profile
+      const profileRes = await updateUserApi(user.id, formData);
+      
+      // Update Password if filled
+      if (data.oldPassword && data.newPassword) {
+         await changePasswordApi({
+            oldPassword: data.oldPassword,
+            newPassword: data.newPassword
+         });
+      }
+
+      updateProfileContext(profileRes.data);
+      onSave(profileRes.data);
+
+    } catch (err) {
+      console.error("Update error:", err);
+      setGeneralError(err.response?.data?.error || err.message || "Cập nhật thất bại.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <form className="profile-card" onSubmit={handleSubmit(onSubmit, onInvalid)}>
-      <h3 style={{ marginBottom: '20px', fontSize: '18px', fontWeight: '600' }}>Chỉnh sửa thông tin cá nhân</h3>
-
-      {generalError && <div className="form-general-error">{generalError}</div>}
-
-      <div className="form-group">
-        <label>Họ và tên:</label>
-        <input 
-          type="text" 
-          className={`form-control ${errors.name ? "is-invalid" : ""}`}
-          placeholder="Nhập họ và tên"
-          {...register("name")}
-        />
-        {errors.name && <span className="error-msg">{errors.name.message}</span>}
+    <form className="max-w-5xl mx-auto pb-20 animate-in fade-in duration-700" onSubmit={handleSubmit(onSubmit)}>
+      <div className="mb-10 px-2">
+        <h2 className="text-3xl font-black text-slate-900 tracking-tighter">Chỉnh sửa hồ sơ</h2>
+        <p className="text-slate-500 font-medium max-w-2xl text-sm leading-relaxed italic opacity-70">
+          Hãy cập nhật thông tin cá nhân của bạn để chủ nhà có thể liên hệ và xử lý các hợp đồng thuê nhà nhanh nhất.
+        </p>
       </div>
 
-      <div className="form-group">
-        <label>Số điện thoại:</label>
-        <input 
-          type="text" 
-          className={`form-control ${errors.phone ? "is-invalid" : ""}`}
-          placeholder="0xxxxxxxxx"
-          {...register("phone")}
-        />
-        {errors.phone && <span className="error-msg">{errors.phone.message}</span>}
-      </div>
+      {generalError && (
+        <div className="mb-8 p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl flex items-center gap-3 font-semibold text-xs animate-shake">
+          ❌ {generalError}
+        </div>
+      )}
 
-      <div className="form-group">
-         <label>Trạng thái (Hệ thống cấp):</label>
-         <input type="text" className="form-control" disabled value={user?.status === 'active' ? 'Đang hoạt động' : 'Đã khóa'} />
-      </div>
+      {/* REUSABLE Common Personal Info Section - Role Tenant (Emerald) */}
+      <PersonalInfoSection 
+        register={register} 
+        errors={errors} 
+        user={user} 
+        avatarPreview={avatarPreview} 
+        onAvatarChange={handleAvatarChange} 
+        roleLabel="Người thuê" 
+      />
 
-      <div className="button-group">
-        <button type="button" className="btn-secondary" onClick={onCancel}>Hủy</button>
-        <button type="submit" className="btn-primary">Lưu thay đổi</button>
+      {/* REUSABLE Common Security Section - Role Tenant (Emerald) */}
+      <SecuritySection 
+        register={register} 
+        errors={errors} 
+        accentColor="emerald-600" 
+      />
+
+      <div className="flex justify-end items-center gap-4 mt-12 px-2">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-8 py-3.5 text-slate-500 font-bold hover:bg-slate-100 rounded-xl transition-all"
+        >
+          Hủy bỏ
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-10 py-3.5 bg-emerald-600 text-white font-black rounded-xl shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all flex items-center gap-3"
+        >
+          {isSubmitting ? <CircularProgress size={20} color="inherit" /> : "Lưu hồ sơ"}
+        </button>
       </div>
     </form>
   );

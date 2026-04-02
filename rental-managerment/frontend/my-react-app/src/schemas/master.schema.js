@@ -18,4 +18,34 @@ export const profileSchema = yup.object({
   address: yup
     .string()
     .required('Địa chỉ không được để trống'),
+  bankName: yup
+    .string()
+    .matches(/^\p{L}[\p{L}\s]*$/u, 'Tên ngân hàng chỉ được chứa chữ cái')
+    .optional()
+    .nullable(),
+  bankAccountNumber: yup
+    .string()
+    .matches(/^[0-9]+$/, 'Số tài khoản không hợp lệ')
+    .optional()
+    .nullable(),
+  bankAccountHolder: yup
+    .string()
+    .matches(/^[\p{L}\s]+$/u, 'Tên chủ tài khoản chỉ được chứa chữ cái')
+    .optional()
+    .nullable(),
+  bankBranch: yup
+    .string()
+    .optional()
+    .nullable(),
+  oldPassword: yup.string().nullable().optional(),
+  newPassword: yup
+    .string()
+    .nullable()
+    .optional()
+    .test('pass-length', 'Mật khẩu phải ít nhất 6 ký tự', val => !val || val.length >= 6),
+  confirmNewPassword: yup
+    .string()
+    .nullable()
+    .optional()
+    .oneOf([yup.ref('newPassword'), null], 'Mật khẩu xác nhận không khớp'),
 }).required();

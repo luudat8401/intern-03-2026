@@ -58,9 +58,11 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<TenantInfo />} />
+          {/* 4 distinct pages for Tenant */}
+          <Route index element={<div className="font-black text-slate-400 text-xs uppercase tracking-widest p-10">Đang phát triển Trang chủ Người thuê...</div>} />
           <Route path="rooms" element={<TenantRooms />} />
           <Route path="contracts" element={<TenantContracts />} />
+          <Route path="profile" element={<TenantInfo />} />
         </Route>
         <Route path="/unauthorized" element={
           <div style={{ textAlign: "center", marginTop: "50px" }}>

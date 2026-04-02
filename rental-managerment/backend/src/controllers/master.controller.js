@@ -43,7 +43,7 @@ class MasterController {
 
   async updateMaster(req, res) {
     try {
-      const updatedMaster = await masterService.updateMaster(req.params.id, req.body);
+      const updatedMaster = await masterService.updateMaster(req.params.id, req.body, req.file);
       this.logAction(req.method, "Update master");
       res.json(updatedMaster);
     } catch (err) {

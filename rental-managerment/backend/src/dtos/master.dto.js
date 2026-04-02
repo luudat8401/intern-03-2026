@@ -6,7 +6,6 @@ const profileSchema = yup.object({
     .required("Họ và tên không được để trống")
     .trim()
     .min(2, "Họ và tên quá ngắn")
-    .matches(/^[\p{L}\s]+$/u, "Họ và tên chỉ được chứa chữ cái")
     .max(50, "Họ và tên quá dài"),
   phone: yup
     .string()
@@ -20,9 +19,32 @@ const profileSchema = yup.object({
     .string()
     .required("Email không được để trống")
     .trim()
-    .email("Email không hợp lệ")
-    .matches(/^\S+@\S+\.\S+$/, "Email không đúng định dạng"),
-  address: yup.string().required("Địa chỉ không được để trống").trim(),
+    .email("Email không hợp lệ"),
+  address: yup
+    .string()
+    .required("Địa chỉ không được để trống")
+    .trim(),
+  bankName: yup
+    .string()
+    .optional()
+    .nullable()
+    .trim(),
+  bankAccountNumber: yup
+    .string()
+    .matches(/^[0-9]+$/, 'Số tài khoản không hợp lệ')
+    .optional()
+    .nullable()
+    .trim(),
+  bankAccountHolder: yup
+    .string()
+    .optional()
+    .nullable()
+    .trim(),
+  bankBranch: yup
+    .string()
+    .optional()
+    .nullable()
+    .trim(),
 });
 
 class MasterDTO {

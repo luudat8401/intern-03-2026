@@ -28,13 +28,13 @@ class RoomService {
 
   async getRoomsByMasterId(masterId, page, limit, status) {
     const roomRepo = AppDataSource.getRepository("Room");
-    
+
     // Parse query params (Ensure they are treated as Numbers)
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
     const skip = (pageNum - 1) * limitNum;
     const take = limitNum;
-    
+
     // Build where condition
     const where = { masterId: parseInt(masterId) };
     if (status !== 'all') {
