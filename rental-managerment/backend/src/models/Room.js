@@ -7,7 +7,7 @@ module.exports = new EntitySchema({
     id: { primary: true, type: "int", generated: true },
     roomNumber: { type: "varchar", unique: true, nullable: false },
     price: { type: "float", nullable: false },
-    status: { type: "smallint", default: 0, nullable: false }, // 0: trống, 1: đã thuê
+    status: { type: "smallint", default: 0, nullable: false },
     capacity: { type: "smallint", default: 2, nullable: false },
     currentTenants: { type: "smallint", default: 0, nullable: false },
     thumbnail: { type: "varchar", nullable: false },
@@ -18,6 +18,8 @@ module.exports = new EntitySchema({
     district: { type: "varchar", default: "Quận trung tâm", nullable: false },
     area: { type: "varchar", default: "20m2", nullable: false },
     isTrending: { type: "boolean", default: false, nullable: false },
+    amenities: { type: "jsonb", nullable: true, default: "[]" },
+    description: { type: "text", nullable: true },
     masterId: { type: "int", nullable: false },
     createdAt: { type: "timestamp", createDate: true },
     updatedAt: { type: "timestamp", updateDate: true }

@@ -1,14 +1,15 @@
 export { default as Dashboard } from "./Admin/Dashboard";
 export { default as MasterDashboard } from "./Master/MasterDashboard";
 export { default as MasterRooms } from "./Master/MasterRooms";
-export { default as MasterContracts } from "./Master/MasterContracts";
 export { default as MasterProfile } from "./Master/MasterProfile";
 export { default as TenantInfo } from "./Tenant/TenantInfo";
 export { default as TenantRooms } from "./Tenant/TenantRooms";
-export { default as TenantContracts } from "./Tenant/TenantContracts";
 export { default as Masters } from "./Admin/Masters";
 export { default as Rooms } from "./Admin/Rooms";
 export { default as Users } from "./Admin/Users";
 export { default as Contracts } from "./Admin/Contracts";
 export { default as Login } from "./Auth/Login";
 export { default as Register } from "./Auth/Register";
+export { default as RoomFormPage } from "./Master/RoomForm";
+export { default as RoomDetailPage } from "./Tenant/RoomDetail";
+export { default as SharedContracts } from "./Common/Contracts";

@@ -5,7 +5,7 @@ export default function ContractRequestModal({ room, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     startDate: '',
     endDate: '',
-    deposit: room.price, // Mặc định để bằng giá thuê 1 tháng
+    deposit: room.price,
   });
   const [loading, setLoading] = useState(false);
 

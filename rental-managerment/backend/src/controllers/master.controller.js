@@ -41,6 +41,17 @@ class MasterController {
     }
   }
 
+  async getDashboardStats(req, res) {
+    try {
+      const masterId = req.params.id; 
+      const months = parseInt(req.query.months) || 6;
+      const stats = await masterService.getMasterDashboardStats(masterId, months);
+      res.json(stats);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
   async updateMaster(req, res) {
     try {
       const updatedMaster = await masterService.updateMaster(req.params.id, req.body, req.file);

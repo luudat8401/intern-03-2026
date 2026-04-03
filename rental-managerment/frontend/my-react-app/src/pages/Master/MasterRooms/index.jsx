@@ -1,7 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import RoomRow from './components/RoomRow';
-import RoomModal from './components/RoomModal';
 import DeleteConfirmModal from '../../../components/Common/DeleteConfirmModal';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
@@ -10,6 +10,7 @@ import { useMasterRooms } from '../../../hooks/useMasterRooms';
 
 export default function MasterRooms() {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
 
   const {
     rooms,
@@ -20,11 +21,8 @@ export default function MasterRooms() {
     setFilterStatus,
     currentPage,
     setCurrentPage,
-    roomModal,
-    setRoomModal,
     deleteModal,
     setDeleteModal,
-    handleSaveRoom,
     handleConfirmDelete
   } = useMasterRooms(userProfile);
 
@@ -50,7 +48,7 @@ export default function MasterRooms() {
           <p className="text-slate-500 font-medium">Hệ thống trung tâm quản lý tài sản và dãy trọ của bạn.</p>
         </div>
         <button
-          onClick={() => setRoomModal({ isOpen: true, data: null })}
+          onClick={() => navigate('add')}
           className="bg-blue-700 text-white px-6 py-3.5 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-900 transition-all hover:shadow-lg active:scale-95 shadow-md"
         >
           <AddIcon />
@@ -104,7 +102,7 @@ export default function MasterRooms() {
                   <RoomRow
                     key={room.id}
                     room={room}
-                    onEdit={(room) => setRoomModal({ isOpen: true, data: room })}
+                    onEdit={(room) => navigate(`edit/${room.id}`)}
                     onDelete={(id) => setDeleteModal({ isOpen: true, id })}
                   />
                 ))
@@ -138,13 +136,6 @@ export default function MasterRooms() {
         </div>
       </div>
 
-      <RoomModal
-        isOpen={roomModal.isOpen}
-        onClose={() => setRoomModal({ isOpen: false, data: null })}
-        onSave={handleSaveRoom}
-        roomData={roomModal.data}
-        masterId={userProfile?.id || ''}
-      />
 
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}

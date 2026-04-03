@@ -18,7 +18,8 @@ const AppDataSource = new DataSource({
     require("../migrations/1711874000000-AddBankInfoToMaster"),
     require("../migrations/1711876000000-AddAvatarToMaster"),
     require("../migrations/1711877000000-FixMasterConstraints"),
-    require("../migrations/1711878000000-AddProfileFieldsToUser")
+    require("../migrations/1711878000000-AddProfileFieldsToUser"),
+    require("../migrations/1711880000000-AddDescriptionAndAmenitiesToRooms")
   ],
   migrationsRun: true,
 });

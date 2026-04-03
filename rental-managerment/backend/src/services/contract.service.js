@@ -24,7 +24,7 @@ class ContractService {
     const room = await roomRepo.findOne({ where: { id: roomId } });
     if (!room) throw new Error("Phòng không tồn tại");
 
-    if (room.status !== "Trống") {
+    if (room.status !== 0) {
       throw new Error("Phòng này không thể đăng ký thuê lúc này!");
     }
 

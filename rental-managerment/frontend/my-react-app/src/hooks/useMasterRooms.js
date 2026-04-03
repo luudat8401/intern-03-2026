@@ -14,8 +14,6 @@ export function useMasterRooms(userProfile) {
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 5;
 
-  // UI State: Unified Add/Edit modal
-  const [roomModal, setRoomModal] = useState({ isOpen: false, data: null });
 
   // UI State: Delete Modal
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
@@ -51,22 +49,6 @@ export function useMasterRooms(userProfile) {
     setCurrentPage(1);
   }, [filterStatus]);
 
-  // 2. Add/Update logic
-  const handleSaveRoom = async (formData, roomId) => {
-    try {
-      if (roomId) {
-        await updateRoomApi(roomId, formData);
-        toast.success("Cập nhật thông tin phòng thành công!");
-      } else {
-        await createRoom(formData);
-        toast.success("Đã thêm phòng mới vào kho dữ liệu!");
-      }
-      setRoomModal({ isOpen: false, data: null });
-      fetchRooms(); // Reload from server
-    } catch (err) {
-      toast.error("Lỗi: " + (err.response?.data?.error || err.message));
-    }
-  };
 
   // 3. Delete logic
   const handleConfirmDelete = async () => {
@@ -91,11 +73,8 @@ export function useMasterRooms(userProfile) {
     setFilterStatus,
     currentPage,
     setCurrentPage,
-    roomModal,
-    setRoomModal,
     deleteModal,
     setDeleteModal,
-    handleSaveRoom,
     handleConfirmDelete,
     refreshRooms: fetchRooms
   };

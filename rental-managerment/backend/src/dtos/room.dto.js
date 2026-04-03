@@ -79,6 +79,14 @@ const roomSchema = yup.object({
   isTrending: yup
     .boolean()
     .default(false),
+  description: yup
+    .string()
+    .nullable()
+    .trim(),
+  amenities: yup
+    .array()
+    .of(yup.string())
+    .nullable(),
 });
 
 class RoomDTO {

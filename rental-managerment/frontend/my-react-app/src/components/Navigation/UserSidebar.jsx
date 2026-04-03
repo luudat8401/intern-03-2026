@@ -8,7 +8,7 @@ import StarsIcon from '@mui/icons-material/Stars';
 export default function UserSidebar() {
   const navItems = [
     { to: "/user", icon: <DashboardIcon fontSize="small" />, label: "Trang chủ", end: true },
-    { to: "/user/rooms", icon: <MeetingRoomIcon fontSize="small" />, label: "Phòng của tôi", end: false },
+    { to: "/user/rooms", icon: <MeetingRoomIcon fontSize="small" />, label: "Danh sách phòng", end: false },
     { to: "/user/contracts", icon: <AssignmentIcon fontSize="small" />, label: "Hợp đồng", end: false },
     { to: "/user/profile", icon: <AccountCircleIcon fontSize="small" />, label: "Hồ sơ", end: false },
   ];

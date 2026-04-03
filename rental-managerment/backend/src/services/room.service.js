@@ -1,6 +1,5 @@
 const { AppDataSource } = require("../config/db");
 const { cloudinary } = require("../config/cloudinary");
-const { In } = require("typeorm");
 
 class RoomService {
   async deleteImageFromCloudinary(imageUrl) {
@@ -21,35 +20,82 @@ class RoomService {
     }
   }
 
-  async getAllRooms() {
+  // REFACTORED: Phân trang & Sắp xếp hoàn toàn dựa trên yêu cầu từ Frontend
+  async getAllRooms(query) {
     const roomRepo = AppDataSource.getRepository("Room");
-    return await roomRepo.find({ relations: ["master"] });
+    const { page, limit, city, district, search, sort } = query;
+
+    // Ép kiểu đảm bảo tính toán chính xác
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+    const take = limitNum;
+
+    const queryBuilder = roomRepo.createQueryBuilder("room")
+      .leftJoinAndSelect("room.master", "master")
+      .where("room.status = :status", { status: 0 }); // Luôn chỉ lấy phòng trống (0)
+
+    // Lọc theo địa lý (Backend xử lý)
+    if (city && city !== 'Chọn Tỉnh/Thành') {
+      queryBuilder.andWhere("room.city = :city", { city });
+    }
+    if (district && district !== 'Chọn Quận/Huyện') {
+      queryBuilder.andWhere("room.district = :district", { district });
+    }
+
+    // Tìm kiếm (Backend xử lý)
+    if (search) {
+      queryBuilder.andWhere("(room.roomNumber ILIKE :search OR room.title ILIKE :search OR room.location ILIKE :search)", { search: `%${search}%` });
+    }
+
+    // SẮP XẾP (Backend xử lý theo yêu cầu từ Frontend)
+    if (sort === 'price_asc') {
+      queryBuilder.orderBy("room.price", "ASC");
+    } else if (sort === 'price_desc') {
+      queryBuilder.orderBy("room.price", "DESC");
+    } else {
+      queryBuilder.orderBy("room.id", "DESC"); // Mặc định mới nhất trước
+    }
+
+    const [rooms, total] = await queryBuilder
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
+
+    return {
+      rooms,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / take)
+    };
   }
 
   async getRoomsByMasterId(masterId, page, limit, status) {
     const roomRepo = AppDataSource.getRepository("Room");
 
-    // Parse query params (Ensure they are treated as Numbers)
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
     const skip = (pageNum - 1) * limitNum;
     const take = limitNum;
 
-    // Build where condition
-    const where = { masterId: parseInt(masterId) };
+    const queryBuilder = roomRepo.createQueryBuilder("room")
+      .leftJoinAndSelect("room.master", "master")
+      .leftJoinAndSelect("room.users", "users")
+      .leftJoinAndSelect("room.contracts", "contracts", "contracts.status = :activeStatus", { activeStatus: 1 })
+      .leftJoinAndSelect("contracts.user", "contractUser")
+      .where("room.masterId = :masterId", { masterId: parseInt(masterId) });
+
     if (status !== 'all') {
-      where.status = parseInt(status);
+      queryBuilder.andWhere("room.status = :status", { status: parseInt(status) });
     }
 
-    const [rooms, total] = await roomRepo.findAndCount({
-      where,
-      relations: ["master"],
-      order: { id: "DESC" }, // Newest first
-      skip,
-      take
-    });
+    const [rooms, total] = await queryBuilder
+      .orderBy("room.id", "DESC")
+      .skip(skip)
+      .take(take)
+      .getManyAndCount();
 
-    // Get full stats for the whole inventory (ignoring pagination and status filter)
     const masterWhere = { masterId: parseInt(masterId) };
     const [totalAll, occupied, vacant, pending, maintenance] = await Promise.all([
       roomRepo.count({ where: masterWhere }),
@@ -62,8 +108,8 @@ class RoomService {
     return {
       rooms,
       total,
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: pageNum,
+      limit: limitNum,
       totalPages: Math.ceil(total / take),
       stats: {
         total: totalAll,
@@ -73,6 +119,35 @@ class RoomService {
         maintenance
       }
     };
+  }
+
+  async getRoomById(id) {
+    const roomRepo = AppDataSource.getRepository("Room");
+    return await roomRepo.findOne({
+      where: { id: parseInt(id) },
+      relations: ["master"]
+    });
+  }
+
+  async getRandomRooms(city, excludeId) {
+    try {
+      const roomRepo = AppDataSource.getRepository("Room");
+      const queryBuilder = roomRepo.createQueryBuilder("room")
+        .leftJoinAndSelect("room.master", "master")
+        .where("room.status = :status", { status: 0 })
+        .andWhere("room.city = :city", { city })
+        .andWhere("room.id != :excludeId", { excludeId: parseInt(excludeId) });
+
+      const rooms = await queryBuilder
+        .orderBy("RANDOM()")
+        .limit(3)
+        .getMany();
+
+      return rooms;
+    } catch (err) {
+      console.error("[RoomService.getRandomRooms] Error:", err.message);
+      return []; // Return empty instead of throwing to keep page alive
+    }
   }
 
   async createRoom(data, file) {
@@ -104,8 +179,8 @@ class RoomService {
     if (data.status !== undefined && data.status !== roomInfo.status) {
       const activeContract = await contractRepo.findOne({
         where: [
-          { roomId, status: 1 }, // 1: active
-          { roomId, status: 0 }  // 0: pending
+          { roomId, status: 1 },
+          { roomId, status: 0 }
         ]
       });
 
@@ -125,6 +200,9 @@ class RoomService {
     if (data.price) data.price = parseFloat(data.price);
     if (data.area) data.area = parseFloat(data.area);
     if (data.capacity) data.capacity = parseInt(data.capacity);
+
+    // FIX: Đảm bảo status được lưu dưới dạng số nếu nhảy vào đây
+    if (data.status !== undefined) data.status = parseInt(data.status);
 
     await roomRepo.update(roomId, data);
     return await roomRepo.findOne({

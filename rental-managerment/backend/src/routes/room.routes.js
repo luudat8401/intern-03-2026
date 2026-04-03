@@ -7,6 +7,8 @@ const validate = require("../middleware/validation.middleware");
 const roomDto = require("../dtos/room.dto");
 
 router.get("/", roomController.getAllRooms);
+router.get("/random", roomController.getRandomRooms);
+router.get("/:id", roomController.getRoomById);
 router.get("/master/:masterId", verifyToken, checkRole(["master"]), roomController.getRoomsByMasterId);
 router.post("/", verifyToken, checkRole(["master"]), uploadCloud.single("image"), validate(roomDto.validateRoom), roomController.createRoom);
 router.put("/:id", verifyToken, checkRole(["master", "admin"]), uploadCloud.single("image"), validate(roomDto.validateRoom), roomController.updateRoom);

@@ -3,10 +3,10 @@ const roomService = require("../services/room.service");
 class RoomController {
   async getAllRooms(req, res) {
     try {
-      const rooms = await roomService.getAllRooms();
-      res.json(rooms);
+      const result = await roomService.getAllRooms(req.query);
+      res.json(result);
     } catch (err) {
-      res.status(500).json({ error: "Server error" });
+      res.status(500).json({ error: err.message || "Server error" });
     }
   }
 
@@ -20,6 +20,28 @@ class RoomController {
         status
       );
       res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  async getRoomById(req, res) {
+    try {
+      const room = await roomService.getRoomById(req.params.id);
+      if (!room) {
+        return res.status(404).json({ error: "Phòng không tồn tại" });
+      }
+      res.json(room);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  async getRandomRooms(req, res) {
+    try {
+      const { city, excludeId } = req.query;
+      const rooms = await roomService.getRandomRooms(city, excludeId);
+      res.json(rooms);
     } catch (err) {
       res.status(500).json({ error: err.message });
     }

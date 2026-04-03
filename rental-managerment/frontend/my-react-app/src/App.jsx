@@ -7,9 +7,9 @@ import RoleDirector from "./components/Guards/RoleDirector";
 import ProtectedRoute from "./components/Guards/ProtectedRoute";
 import {
   Dashboard, MasterDashboard, TenantInfo,
-  TenantRooms, TenantContracts,
-  MasterRooms, MasterContracts,
-  Masters, Rooms, Users, Contracts, Login, Register, MasterProfile
+  TenantRooms, SharedContracts,
+  MasterRooms,
+  Masters, Rooms, Users, Contracts, Login, Register, MasterProfile, RoomFormPage, RoomDetailPage
 } from "./pages";
 import "./index.css";
 
@@ -46,7 +46,9 @@ function App() {
         >
           <Route index element={<MasterDashboard />} />
           <Route path="rooms" element={<MasterRooms />} />
-          <Route path="contracts" element={<MasterContracts />} />
+          <Route path="rooms/add" element={<RoomFormPage />} />
+          <Route path="rooms/edit/:id" element={<RoomFormPage />} />
+          <Route path="contracts" element={<SharedContracts />} />
           <Route path="profile" element={<MasterProfile />} />
         </Route>
 
@@ -58,10 +60,10 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* 4 distinct pages for Tenant */}
           <Route index element={<div className="font-black text-slate-400 text-xs uppercase tracking-widest p-10">Đang phát triển Trang chủ Người thuê...</div>} />
           <Route path="rooms" element={<TenantRooms />} />
-          <Route path="contracts" element={<TenantContracts />} />
+          <Route path="rooms/:id" element={<RoomDetailPage />} />
+          <Route path="contracts" element={<SharedContracts />} />
           <Route path="profile" element={<TenantInfo />} />
         </Route>
         <Route path="/unauthorized" element={

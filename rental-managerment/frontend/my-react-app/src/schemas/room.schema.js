@@ -12,18 +12,21 @@ export const roomSchema = yup.object({
     city: yup
         .string()
         .required("Thành phố là bắt buộc")
+        .matches(/^[a-zA-ZÀ-ỹ\s]*$/, "Thành phố không được chứa ký tự đặc biệt")
         .trim()
         .min(1, "Thành phố không được để trống")
         .max(100, "Thành phố không được vượt quá 100 ký tự"),
     ward: yup
         .string()
         .required("Phường là bắt buộc")
+        .matches(/^[a-zA-ZÀ-ỹ\s]*$/, "Phường không được chứa ký tự đặc biệt")
         .trim()
         .min(1, "Phường không được để trống")
         .max(20, "Phường không được vượt quá 20 ký tự"),
     district: yup
         .string()
         .required("Quận là bắt buộc")
+        .matches(/^[a-zA-ZÀ-ỹ\s]*$/, "Quận không được chứa ký tự đặc biệt")
         .trim()
         .min(1, "Quận không được để trống")
         .max(100, "Quận không được vượt quá 100 ký tự"),
@@ -93,4 +96,12 @@ export const roomSchema = yup.object({
             'Trạng thái phòng không hợp lệ'
         )
         .default(0),
+    description: yup
+        .string()
+        .nullable()
+        .trim(),
+    amenities: yup
+        .array()
+        .of(yup.string())
+        .default([]),
 }).required();

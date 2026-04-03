@@ -1,10 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { updateMasterApi } from "../../../api/master.api";
-import ProfileView from '../MasterDashboard/components/ProfileView';
-import { getMaster } from "../../../api/master.api";
-import ProfileForm from '../MasterDashboard/components/ProfileForm';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import ProfileView from './components/ProfileView';
+import ProfileForm from './components/ProfileForm';
 import Toast from "../../../components/Common/Toast";
 
 export default function MasterProfile() {

@@ -11,9 +11,7 @@ class MasterService {
         const pathArr = arr.slice(uploadIndex + 2);
         const fullPath = pathArr.join("/");
         const publicId = fullPath.substring(0, fullPath.lastIndexOf("."));
-
         await cloudinary.uploader.destroy(publicId);
-        console.log(`[Cloudinary] Đã xóa ảnh: ${publicId}`);
       }
     } catch (err) {
       console.error("[Cloudinary Error] Lỗi dọn rác ảnh:", err.message);
@@ -52,25 +50,82 @@ class MasterService {
     }
 
     await masterRepo.update(id, data);
-    const updatedMaster = await masterRepo.findOne({ where: { id: parseInt(id) } });
-    return updatedMaster;
+    return await masterRepo.findOne({ where: { id: parseInt(id) } });
   }
 
   async deleteMaster(id) {
     const masterRepo = AppDataSource.getRepository("Master");
-    
-    // Xóa rác ảnh avatar nếu có trước khi xóa bản ghi
     const masterInfo = await masterRepo.findOne({ where: { id: parseInt(id) } });
     if (masterInfo && masterInfo.avatar) {
       await this.deleteImageFromCloudinary(masterInfo.avatar);
     }
-
-    // PostgreSQL tự động dọn rác (CASCADE) các Room, Contract, Account liên quan.
-    // Và tự động SET NULL roomId cho User nhờ cấu hình EntitySchema
     const result = await masterRepo.delete(id);
     if (result.affected === 0) throw new Error("Không tìm thấy chủ trọ để xóa");
-    
     return { message: "Đã xóa toàn bộ dữ liệu liên quan đến chủ trọ thành công!" };
+  }
+
+  async getMasterDashboardStats(masterId, monthsRange = 6) {
+    const roomRepo = AppDataSource.getRepository("Room");
+    const contractRepo = AppDataSource.getRepository("Contract");
+    const id = parseInt(masterId);
+
+    // 1. Thống kê cơ bản thực tế
+    const [totalRooms, vacantRooms, occupiedRooms, activeContracts] = await Promise.all([
+      roomRepo.count({ where: { masterId: id } }),
+      roomRepo.count({ where: { masterId: id, status: 0 } }),
+      roomRepo.count({ where: { masterId: id, status: 1 } }),
+      contractRepo.count({ where: { masterId: id, status: 1 } })
+    ]);
+
+    // 2. Tổng doanh thu tháng hiện tại thực tế
+    const activeContractsData = await contractRepo.find({ where: { masterId: id, status: 1 } });
+    const totalRevenue = activeContractsData.reduce((acc, curr) => acc + (curr.price || 0), 0);
+
+    // 3. Hợp đồng sắp hết hạn (30 ngày)
+    const now = new Date();
+    const next30Days = new Date();
+    next30Days.setDate(now.getDate() + 30);
+
+    const expiringSoon = await contractRepo.createQueryBuilder("contract")
+      .leftJoinAndSelect("contract.user", "user")
+      .leftJoinAndSelect("contract.room", "room")
+      .where("contract.masterId = :id", { id })
+      .andWhere("contract.status = :status", { status: 1 })
+      .andWhere("contract.endDate BETWEEN :now AND :next30", { now, next30: next30Days })
+      .orderBy("contract.endDate", "ASC")
+      .limit(5)
+      .getMany();
+
+    // 4. Sinh dữ liệu biểu đồ cho X tháng
+    const monthlyRevenue = [];
+    for (let i = monthsRange - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const monthYear = `${d.getMonth() + 1}/${d.getFullYear()}`;
+        
+        monthlyRevenue.push({
+            month: monthYear,
+            amount: i === 0 ? totalRevenue : 0 // Tháng hiện tại hiển thị doanh thu thực
+        });
+    }
+
+    return {
+      stats: {
+        totalRooms,
+        vacantRooms,
+        occupiedRooms,
+        activeContracts,
+        totalRevenue
+      },
+      expiringSoon: expiringSoon.map(c => ({
+        id: c.id,
+        name: c.user?.name || 'Ẩn danh',
+        room: `P. ${c.room?.roomNumber || '?' }`,
+        daysLeft: Math.ceil((new Date(c.endDate) - new Date()) / (1000 * 60 * 60 * 24)) + " ngày",
+        endDate: c.endDate
+      })),
+      chartData: monthlyRevenue
+    };
   }
 }
 
