@@ -5,6 +5,12 @@ const { uploadCloud } = require("../config/cloudinary");
 const { verifyToken, checkRole } = require("../middleware/auth.middleware");
 const validate = require("../middleware/validation.middleware");
 const roomDto = require("../dtos/room.dto");
+const importDto = require("../dtos/import.dto");
+const multer = require("multer");
+const uploadMem = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }
+});
 
 router.get("/", roomController.getAllRooms);
 
@@ -12,6 +18,9 @@ router.get("/", roomController.getAllRooms);
 router.get("/admin/all", verifyToken, checkRole(["admin"]), roomController.getAllRoomsForAdmin);
 router.get("/admin/export", verifyToken, checkRole(["admin"]), roomController.exportRoomsToExcel);
 router.get("/admin/export-batch", verifyToken, checkRole(["admin"]), roomController.exportRoomsBatch);
+router.post("/admin/export-cloudinary", verifyToken, checkRole(["admin"]), roomController.exportRoomsToCloudinary);
+router.get("/admin/export-status/:jobId", verifyToken, checkRole(["admin"]), roomController.getExportStatus);
+router.post("/admin/import", verifyToken, checkRole(["admin"]), validate(importDto.validateImport), roomController.importRooms);
 
 router.get("/master/:masterId", verifyToken, checkRole(["master", "admin"]), roomController.getRoomsByMasterId);
 router.get("/trending", roomController.getTrendingRooms);

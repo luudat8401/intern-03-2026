@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import RoomTable from "./components/RoomTable";
 
-import { getAdminRooms, deleteRoomApi, exportAdminRoomsApi, exportAdminRoomsBatchApi } from "../../../api/room.api";
+import { getAdminRooms, deleteRoomApi, exportAdminRoomsApi, exportAdminRoomsBatchApi, exportAdminRoomsCloudinaryApi, importAdminRoomsApi } from "../../../api/room.api";
 import DeleteConfirmModal from "../../../components/Common/DeleteConfirmModal";
-import { Search, Filter, FileSpreadsheet, RefreshCcw } from "lucide-react";
+import ExportStatusWidget from "../../../components/Common/ExportStatusWidget";
+import { Search, Filter, FileSpreadsheet, RefreshCcw, Cloud, Upload, Loader2 } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useRef } from "react";
+import * as XLSX from "xlsx";
 
 
 export default function Rooms() {
@@ -24,6 +28,8 @@ export default function Rooms() {
 
     const [isExporting, setIsExporting] = useState(false);
     const [isExportingBatch, setIsExportingBatch] = useState(false);
+    const [activeJobId, setActiveJobId] = useState(null);
+    const fileInputRef = useRef(null);
     const limit = 10;
 
 
@@ -152,6 +158,84 @@ export default function Rooms() {
             setIsExportingBatch(false);
         }
     };
+    const handleExportCloudinary = async () => {
+        try {
+            const response = await exportAdminRoomsCloudinaryApi(activeFilters);
+            if (response.data.success) {
+                setActiveJobId(response.data.jobId);
+            }
+        } catch (error) {
+            console.error("[CLOUDINARY] Lỗi:", error);
+        }
+    };
+
+    const handleImportExcel = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // 1. Validate kích thước file (Tối đa 5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast.error("File quá lớn! Vui lòng chọn file dưới 5MB.");
+            e.target.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Đọc dữ liệu thô dạng mảng
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                // Bỏ qua dòng tiêu đề, lọc các dòng có dữ liệu và map đúng 17 cột
+                const rows = json.slice(1).filter(r => r.length > 0).map(r => ({
+                    masterName: r[0]?.toString().trim(),
+                    masterPhone: r[1]?.toString().trim(),
+                    masterEmail: r[2]?.toString().trim(),
+                    masterAddress: r[3]?.toString().trim(),
+                    roomNumber: r[4]?.toString().trim(),
+                    title: r[5]?.toString().trim(),
+                    price: parseFloat(r[6]),
+                    area: parseFloat(r[7]),
+                    capacity: parseInt(r[8]),
+                    city: r[9]?.toString().trim(),
+                    district: r[10]?.toString().trim(),
+                    ward: r[11]?.toString().trim(),
+                    location: r[12]?.toString().trim(),
+                    description: r[13]?.toString().trim(),
+                    amenities: r[14]?.toString().trim(),
+                    isTrending: r[15]?.toString().toLowerCase() === "true" || r[15] === "1" || r[15]?.toString().toLowerCase() === "có"
+                }));
+
+                if (rows.length === 0) {
+                    toast.error("File không có dữ liệu!");
+                    return;
+                }
+
+                if (rows.length > 100) {
+                    toast.error("Chỉ được nhập tối đa 100 dòng mỗi lần!");
+                    return;
+                }
+
+                // Gửi mảng dữ liệu về Backend
+                const res = await importAdminRoomsApi(rows);
+                toast.success(res.data.message || "Nhập dữ liệu thành công!");
+                fetchRooms(page);
+            } catch (error) {
+                console.error("Lỗi xử lý file Excel:", error);
+                const errorMsg = error.response?.data?.error || "Lỗi khi xử lý file Excel";
+                toast.error(errorMsg, { duration: 6000 });
+            } finally {
+                e.target.value = "";
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
 
     const handleDeleteClick = (id) => {
         setSelectedRoomId(id);
@@ -202,6 +286,30 @@ export default function Rooms() {
                         >
                             {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
                             Xuất Stream
+                        </button>
+
+                        <button
+                            onClick={handleExportCloudinary}
+                            disabled={!!activeJobId}
+                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
+                        >
+                            <Cloud className="w-4 h-4" />
+                            Xuất Cloud
+                        </button>
+
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImportExcel}
+                            accept=".xlsx, .xls"
+                            className="hidden"
+                        />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-900/20 disabled:opacity-50"
+                        >
+                            <Upload className="w-4 h-4" />
+                            Nhập file
                         </button>
                     </div>
                 </div>
@@ -313,6 +421,17 @@ export default function Rooms() {
                 title="Xác nhận xóa phòng?"
                 message="Hành động này không thể hoàn tác. Dữ liệu phòng sẽ bị xóa vĩnh viễn khỏi hệ thống."
             />
+
+            {activeJobId && (
+                <ExportStatusWidget
+                    jobId={activeJobId}
+                    onClose={() => setActiveJobId(null)}
+                    onFinish={(url) => {
+                        console.log("Export finished! URL:", url);
+                        // Có thể tự động tải nếu muốn: window.open(url);
+                    }}
+                />
+            )}
         </div>
     );
 }

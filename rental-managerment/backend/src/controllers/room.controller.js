@@ -123,6 +123,52 @@ class RoomController {
       res.status(500).json({ error: err.message });
     }
   }
+
+  // --- ASYNC CLOUD EXCEL EXPORT (GOOGLE DRIVE STYLE) ---
+
+  async exportRoomsToCloudinary(req, res) {
+    try {
+      const jobId = `job_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+      // Kích hoạt xử lý ngầm (Không dùng await)
+      roomService.exportRoomsToCloudinary(jobId, req.query);
+
+      // Trả về jobId ngay lập tức cho FE
+      res.json({ success: true, jobId });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  async getExportStatus(req, res) {
+    try {
+      const status = roomService.getExportStatus(req.params.jobId);
+      if (!status) {
+        return res.status(404).json({ error: "Job không tồn tại" });
+      }
+      res.json(status);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
+  async importRooms(req, res) {
+    try {
+      console.log("📥 NHẬN DỮ LIỆU IMPORT (Raw):", JSON.stringify(req.body, null, 2));
+      const { data } = req.body;
+      if (!data || !Array.isArray(data)) {
+        return res.status(400).json({ error: "Dữ liệu không hợp lệ (Expect JSON Array)." });
+      }
+      const result = await roomService.importRooms(data);
+      res.json(result);
+    } catch (err) {
+      console.error("❌ LỖI VALIDATION IMPORT:", err.errors || err.message);
+      res.status(400).json({ 
+        error: "Dữ liệu không hợp lệ", 
+        details: err.errors || [err.message] 
+      });
+    }
+  }
 }
 
 module.exports = new RoomController();

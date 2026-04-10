@@ -1,6 +1,10 @@
 const { AppDataSource } = require("../config/db");
 const { Not } = require("typeorm");
 const { cloudinary } = require("../config/cloudinary");
+const { PassThrough } = require("stream");
+
+// In-memory store for export jobs
+const exportJobs = new Map();
 
 class RoomService {
   async deleteImageFromCloudinary(imageUrl) {
@@ -283,7 +287,6 @@ class RoomService {
       queryBuilder.andWhere("(room.roomNumber ILIKE :search OR room.title ILIKE :search)", { search: `%${search}%` });
     }
 
-
     const [rooms, total] = await queryBuilder
       .orderBy("room.id", "DESC")
       .skip(skip)
@@ -321,15 +324,23 @@ class RoomService {
     }
 
     const headers = [
+      { label: "Họ tên Chủ trọ", key: "master_name", width: 20 },
+      { label: "SĐT Chủ trọ", key: "master_phone", width: 15 },
+      { label: "Email Chủ trọ", key: "master_email", width: 25 },
+      { label: "Địa chỉ Chủ trọ", key: "master_address", width: 30 },
       { label: "Số phòng", key: "room_number", width: 15 },
       { label: "Tiêu đề", key: "title", width: 30 },
       { label: "Giá thuê", key: "price", width: 15 },
       { label: "Diện tích", key: "area", width: 15 },
       { label: "Sức chứa", key: "capacity", width: 15 },
-      { label: "Địa chỉ", key: "location", width: 50 },
+      { label: "Tỉnh/Thành", key: "city", width: 20 },
+      { label: "Quận/Huyện", key: "district", width: 20 },
+      { label: "Phường/Xã", key: "ward", width: 20 },
+      { label: "Địa chỉ chi tiết", key: "location", width: 50 },
+      { label: "Mô tả", key: "description", width: 40 },
+      { label: "Tiện ích", key: "amenities", width: 30 },
+      { label: "Nổi bật", key: "is_trending", width: 10 },
       { label: "Trạng thái", key: "status", width: 15 },
-      { label: "Chủ trọ", key: "master", width: 20 },
-      { label: "SĐT Chủ trọ", key: "phone", width: 15 },
     ];
 
     const statusMap = { 0: "Trống", 1: "Đã thuê", 2: "Đang xử lý", 3: "Bảo trì", 4: "Đã xóa" };
@@ -351,22 +362,30 @@ class RoomService {
           if (count === 1) console.log("Mẫu dữ liệu dòng đầu tiên:", room);
 
           const mappedRoom = {
-            room_number: room.room_roomNumber || room.room_room_number || room.roomNumber || "N/A",
-            title: room.room_title || room.title || "N/A",
-            price: (room.room_price || 0).toLocaleString('vi-VN') + " đ",
-            area: (room.room_area || 0) + " m2",
-            capacity: (room.room_capacity || 0) + " người",
-            location: `${room.room_location || ''}, ${room.room_ward || ''}, ${room.room_district || ''}, ${room.room_city || ''}`,
-            status: statusMap[room.room_status] || "Không xác định",
-            master: room.master_name || "N/A",
-            phone: room.master_phone || "N/A"
+            master_name: room.master_name || "N/A",
+            master_phone: room.master_phone || "N/A",
+            master_email: room.master_email || "N/A",
+            master_address: room.master_address || "N/A",
+            room_number: room.room_room_number || room.room_roomNumber || "N/A",
+            title: room.room_title || "N/A",
+            price: room.room_price || 0,
+            area: room.room_area || 0,
+            capacity: room.room_capacity || 0,
+            city: room.room_city || "N/A",
+            district: room.room_district || "N/A",
+            ward: room.room_ward || "N/A",
+            location: room.room_location || "N/A",
+            description: room.room_description || "N/A",
+            amenities: Array.isArray(room.room_amenities) ? room.room_amenities.join(", ") : 
+                       (typeof room.room_amenities === 'string' ? room.room_amenities : ""),
+            is_trending: room.room_is_trending || room.room_isTrending ? "Có" : "Không",
+            status: statusMap[room.room_status] || "N/A",
           };
           worksheet.addRow(mappedRoom).commit();
         } catch (err) {
           console.error(`Lỗi tại dòng ${count}:`, err);
         }
       });
-
 
       stream.on('end', async () => {
         console.log(`--- HOÀN THÀNH: Đã xuất ${count} dòng ---`);
@@ -411,15 +430,23 @@ class RoomService {
     let offset = 0;
 
     const headers = [
+      { label: "Họ tên Chủ trọ", key: "master_name", width: 20 },
+      { label: "SĐT Chủ trọ", key: "master_phone", width: 15 },
+      { label: "Email Chủ trọ", key: "master_email", width: 25 },
+      { label: "Địa chỉ Chủ trọ", key: "master_address", width: 30 },
       { label: "Số phòng", key: "room_number", width: 15 },
       { label: "Tiêu đề", key: "title", width: 30 },
       { label: "Giá thuê", key: "price", width: 15 },
       { label: "Diện tích", key: "area", width: 15 },
       { label: "Sức chứa", key: "capacity", width: 15 },
-      { label: "Địa chỉ", key: "location", width: 50 },
+      { label: "Tỉnh/Thành", key: "city", width: 20 },
+      { label: "Quận/Huyện", key: "district", width: 20 },
+      { label: "Phường/Xã", key: "ward", width: 20 },
+      { label: "Địa chỉ chi tiết", key: "location", width: 50 },
+      { label: "Mô tả", key: "description", width: 40 },
+      { label: "Tiện ích", key: "amenities", width: 30 },
+      { label: "Nổi bật", key: "is_trending", width: 10 },
       { label: "Trạng thái", key: "status", width: 15 },
-      { label: "Chủ trọ", key: "master", width: 20 },
-      { label: "SĐT Chủ trọ", key: "phone", width: 15 },
     ];
     const statusMap = { 0: "Trống", 1: "Đã thuê", 2: "Đang xử lý", 3: "Bảo trì", 4: "Đã xóa" };
 
@@ -435,15 +462,24 @@ class RoomService {
 
       rooms.forEach(room => {
         worksheet.addRow({
+          master_name: room.master?.name || "N/A",
+          master_phone: room.master?.phone || "N/A",
+          master_email: room.master?.email || "N/A",
+          master_address: room.master?.address || "N/A",
           room_number: room.roomNumber || "N/A",
           title: room.title || "N/A",
-          price: (room.price || 0).toLocaleString('vi-VN') + " đ",
-          area: (room.area || 0) + " m2",
-          capacity: (room.capacity || 0) + " người",
-          location: `${room.location || ''}, ${room.ward || ''}, ${room.district || ''}, ${room.city || ''}`,
+          price: room.price || 0,
+          area: room.area || 0,
+          capacity: room.capacity || 0,
+          city: room.city || "N/A",
+          district: room.district || "N/A",
+          ward: room.ward || "N/A",
+          location: room.location || "N/A",
+          description: room.description || "N/A",
+          amenities: Array.isArray(room.amenities) ? room.amenities.join(", ") : 
+                     (typeof room.amenities === 'string' ? room.amenities : ""),
+          is_trending: room.isTrending ? "Có" : "Không",
           status: statusMap[room.status] || "Không xác định",
-          master: room.master?.name || "N/A",
-          phone: room.master?.phone || "N/A"
         }).commit();
       });
 
@@ -453,9 +489,197 @@ class RoomService {
     await workbook.commit();
     console.log(`--- XUẤT THEO LÔ XONG. Tổng thời gian: ${Date.now() - startTime}ms ---`);
   }
+
+  // PHƯƠNG PHÁP XUẤT LÊN CLOUD (ASYNCHRONOUS - GOOGLE DRIVE STYLE)
+  async exportRoomsToCloudinary(jobId, query) {
+    const roomRepo = AppDataSource.getRepository("Room");
+    const { status, search, city, district } = query;
+
+    // Khởi tạo trạng thái Job
+    exportJobs.set(jobId, { status: "processing", progress: 0, url: null, createdAt: new Date() });
+
+    try {
+      const queryBuilder = roomRepo.createQueryBuilder("room")
+        .leftJoinAndSelect("room.master", "master")
+        .select([
+          "room.id", "room.roomNumber", "room.title", "room.price",
+          "room.area", "room.capacity", "room.city", "room.district",
+          "room.ward", "room.location", "room.description", "room.status",
+          "master.name", "master.phone"
+        ])
+        .distinct(true); // Ngăn chặn việc nhân bản dòng dữ liệu do JOIN
+
+      if (status && status !== 'all') {
+        queryBuilder.andWhere("room.status = :status", { status: parseInt(status) });
+      }
+      if (city && city !== 'Chọn Tỉnh/Thành') {
+        queryBuilder.andWhere("room.city = :city", { city });
+      }
+      if (district && district !== 'Chọn Quận/Huyện') {
+        queryBuilder.andWhere("room.district = :district", { district });
+      }
+      if (search) {
+        queryBuilder.andWhere("(room.roomNumber ILIKE :search OR room.title ILIKE :search)", { search: `%${search}%` });
+      }
+
+      const total = await queryBuilder.getCount();
+      const headers = [
+        { label: "Họ tên Chủ trọ", key: "master_name", width: 20 },
+        { label: "SĐT Chủ trọ", key: "master_phone", width: 15 },
+        { label: "Email Chủ trọ", key: "master_email", width: 25 },
+        { label: "Địa chỉ Chủ trọ", key: "master_address", width: 30 },
+        { label: "Số phòng", key: "room_number", width: 15 },
+        { label: "Tiêu đề", key: "title", width: 30 },
+        { label: "Giá thuê", key: "price", width: 15 },
+        { label: "Diện tích", key: "area", width: 15 },
+        { label: "Sức chứa", key: "capacity", width: 15 },
+        { label: "Tỉnh/Thành", key: "city", width: 20 },
+        { label: "Quận/Huyện", key: "district", width: 20 },
+        { label: "Phường/Xã", key: "ward", width: 20 },
+        { label: "Địa chỉ chi tiết", key: "location", width: 50 },
+        { label: "Mô tả", key: "description", width: 40 },
+        { label: "Tiện ích", key: "amenities", width: 30 },
+        { label: "Nổi bật", key: "is_trending", width: 10 },
+      ];
+      const statusMap = { 0: "Trống", 1: "Đã thuê", 2: "Đang xử lý", 3: "Bảo trì", 4: "Đã xóa" };
+
+      const passThrough = new PassThrough();
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { resource_type: "raw", folder: "exports", public_id: `rooms_export_${jobId}`, format: "xlsx" },
+        async (error, result) => {
+          if (error) {
+            console.error("Cloudinary Upload Error:", error);
+            exportJobs.set(jobId, { ...exportJobs.get(jobId), status: "failed", error: error.message });
+            return;
+          }
+          exportJobs.set(jobId, { ...exportJobs.get(jobId), status: "completed", progress: 100, url: result.secure_url });
+        }
+      );
+
+      const ExcelJS = require('exceljs');
+      const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: passThrough, useStyles: true });
+      const worksheet = workbook.addWorksheet('Rooms');
+      worksheet.columns = headers.map(h => ({ header: h.label, key: h.key, width: h.width }));
+
+      passThrough.pipe(uploadStream);
+
+      const dbStream = await queryBuilder.orderBy("room.id", "DESC").stream();
+      let count = 0;
+
+      dbStream.on('data', (data) => {
+        count++;
+        // Khi dùng stream(), dữ liệu thường được trả về dưới dạng dẹt (flattened) với tiền tố alias
+        const mappedRoom = {
+          master_name: data.master_name || "N/A",
+          master_phone: data.master_phone || "N/A",
+          master_email: data.master_email || "N/A",
+          master_address: data.master_address || "N/A",
+          room_number: data.room_room_number || data.room_roomNumber || "N/A",
+          title: data.room_title || "N/A",
+          price: data.room_price || 0,
+          area: data.room_area || 0,
+          capacity: data.room_capacity || 0,
+          city: data.room_city || "N/A",
+          district: data.room_district || "N/A",
+          ward: data.room_ward || "N/A",
+          location: data.room_location || "N/A",
+          description: data.room_description || "N/A",
+          amenities: Array.isArray(data.room_amenities) ? data.room_amenities.join(", ") : 
+                     (typeof data.room_amenities === 'string' ? data.room_amenities : ""),
+          is_trending: data.room_is_trending || data.room_isTrending ? "Có" : "Không",
+        };
+        worksheet.addRow(mappedRoom).commit();
+
+        if (count % 100 === 0 || count === total) {
+          const progress = total > 0 ? Math.min(Math.round((count / total) * 90), 90) : 50;
+          exportJobs.set(jobId, { ...exportJobs.get(jobId), progress });
+        }
+      });
+      dbStream.on('end', async () => {
+        console.log(`[Stream End] Success: Processed ${count}/${total} rooms.`);
+        await workbook.commit();
+      });
+      dbStream.on('error', (err) => {
+        throw err;
+      });
+    } catch (err) {
+      console.error("Export Async Error:", err);
+      exportJobs.set(jobId, { ...exportJobs.get(jobId), status: "failed", error: err.message });
+    }
+  }
+
+  // Lấy trạng thái Job xuất file
+  getExportStatus(jobId) {
+    return exportJobs.get(jobId);
+  }
+
+  // PHƯƠNG THỨC NHẬP DỮ LIỆU TỔNG HỢP (PHIÊN BẢN ĐƠN GIẢN - MAX 100 DÒNG)
+  async importRooms(rows) {
+    // 1. Chạy Transaction
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const masterCache = new Map(); // Dùng để tránh tạo trùng Master trong cùng 1 file
+
+      for (let i = 0; i < rows.length; i++) {
+        const item = rows[i];
+        console.log(`[Import] Đang xử lý dòng ${i + 1}: ${item.roomNumber}`);
+
+        // 1. Xử lý Master (Chủ trọ)
+        let master = masterCache.get(item.masterPhone);
+
+        if (!master) {
+          master = await queryRunner.manager.findOne("Master", { where: { phone: item.masterPhone } });
+        }
+
+        if (!master) {
+          master = await queryRunner.manager.save("Master", {
+            name: item.masterName,
+            phone: item.masterPhone,
+            email: item.masterEmail,
+            address: item.masterAddress
+          });
+          masterCache.set(item.masterPhone, master);
+        }
+
+        // 2. Xử lý Room (Phòng)
+        const existingRoom = await queryRunner.manager.findOne("Room", { where: { roomNumber: item.roomNumber } });
+        if (existingRoom) {
+          throw new Error(`Dòng ${i + 1}: Số phòng "${item.roomNumber}" đã tồn tại trên hệ thống.`);
+        }
+
+        await queryRunner.manager.save("Room", {
+          roomNumber: item.roomNumber,
+          title: item.title,
+          price: item.price,
+          area: item.area,
+          capacity: item.capacity,
+          city: item.city,
+          district: item.district,
+          ward: item.ward,
+          location: item.location,
+          description: item.description,
+          amenities: (typeof item.amenities === 'string' && item.amenities.trim()) 
+                     ? item.amenities.split(",").map(s => s.trim()) 
+                     : [],
+          isTrending: item.isTrending,
+          thumbnail: "https://res.cloudinary.com/ddcxppxll/image/upload/v1712739324/default-room_vjwf1z.jpg",
+          master: master,
+          status: 0
+        });
+      }
+
+      await queryRunner.commitTransaction();
+      return { message: `Thành công! Đã nhập ${rows.length} phòng.` };
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }
-
-
-
 
 module.exports = new RoomService();
