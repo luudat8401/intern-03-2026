@@ -1,4 +1,5 @@
 const roomService = require("../services/room.service");
+const roomExcelService = require("../services/room-excel.service");
 
 class RoomController {
   async getAllRoomsForAdmin(req, res) {
@@ -12,13 +13,12 @@ class RoomController {
 
   async exportRoomsToExcel(req, res) {
     try {
-      await roomService.exportRoomsToExcel(res, req.query);
+      await roomExcelService.exportRoomsToExcel(res, req.query);
     } catch (err) {
       console.error("Export Controller Error:", err);
       if (!res.headersSent) {
         res.status(500).json({ error: err.message || "Export error" });
       } else {
-        // Nếu header đã gửi rồi (đang dở file), ta chỉ có thể kết thúc response
         res.end();
       }
     }
@@ -26,7 +26,7 @@ class RoomController {
 
   async exportRoomsBatch(req, res) {
     try {
-      await roomService.exportRoomsToExcelBatch(res, req.query);
+      await roomExcelService.exportRoomsToExcelBatch(res, req.query);
     } catch (err) {
       console.error("Batch Export Error:", err);
       if (!res.headersSent) {
@@ -129,11 +129,7 @@ class RoomController {
   async exportRoomsToCloudinary(req, res) {
     try {
       const jobId = `job_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-
-      // Kích hoạt xử lý ngầm (Không dùng await)
-      roomService.exportRoomsToCloudinary(jobId, req.query);
-
-      // Trả về jobId ngay lập tức cho FE
+      roomExcelService.exportRoomsToCloudinary(jobId, req.query);
       res.json({ success: true, jobId });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -142,7 +138,7 @@ class RoomController {
 
   async getExportStatus(req, res) {
     try {
-      const status = roomService.getExportStatus(req.params.jobId);
+      const status = roomExcelService.getExportStatus(req.params.jobId);
       if (!status) {
         return res.status(404).json({ error: "Job không tồn tại" });
       }
@@ -154,18 +150,18 @@ class RoomController {
 
   async importRooms(req, res) {
     try {
-      console.log("📥 NHẬN DỮ LIỆU IMPORT (Raw):", JSON.stringify(req.body, null, 2));
       const { data } = req.body;
       if (!data || !Array.isArray(data)) {
         return res.status(400).json({ error: "Dữ liệu không hợp lệ (Expect JSON Array)." });
       }
-      const result = await roomService.importRooms(data);
+      const result = await roomExcelService.importRooms(data);
       res.json(result);
     } catch (err) {
-      console.error("❌ LỖI VALIDATION IMPORT:", err.errors || err.message);
-      res.status(400).json({ 
-        error: "Dữ liệu không hợp lệ", 
-        details: err.errors || [err.message] 
+      console.error("❌ LỖI IMPORT:", err.message);
+      // Trả về định dạng lỗi chuẩn hóa cho Frontend Modal
+      res.status(400).json({
+        message: err.message,
+        details: err.details || [err.message]
       });
     }
   }
