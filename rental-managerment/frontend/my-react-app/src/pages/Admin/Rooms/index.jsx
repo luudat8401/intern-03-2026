@@ -1,10 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import * as XLSX from "xlsx";
+import { toast } from "react-hot-toast";
+
+// Components
 import RoomTable from "./components/RoomTable";
-
-import { getAdminRooms, deleteRoomApi, exportAdminRoomsApi, exportAdminRoomsBatchApi } from "../../../api/room.api";
+import RoomHeader from "./components/RoomHeader";
+import RoomFilter from "./components/RoomFilter";
+import RoomPagination from "./components/RoomPagination";
+import ImportResultModal from "./components/ImportResultModal";
 import DeleteConfirmModal from "../../../components/Common/DeleteConfirmModal";
-import { Search, Filter, FileSpreadsheet, RefreshCcw } from "lucide-react";
+import ExportStatusWidget from "../../../components/Common/ExportStatusWidget";
 
+// APIs
+import {
+    getAdminRooms,
+    deleteRoomApi,
+    exportAdminRoomsApi,
+    exportAdminRoomsBatchApi,
+    exportAdminRoomsCloudinaryApi,
+    importAdminRoomsApi
+} from "../../../api/room.api";
 
 export default function Rooms() {
     const [rooms, setRooms] = useState([]);
@@ -21,18 +36,22 @@ export default function Rooms() {
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
 
-
     const [isExporting, setIsExporting] = useState(false);
     const [isExportingBatch, setIsExportingBatch] = useState(false);
-    const limit = 10;
-
-
+    const [activeJobId, setActiveJobId] = useState(null);
+    const [importResult, setImportResult] = useState({
+        isOpen: false,
+        errors: [],
+        successMessage: ''
+    });
+    const fileInputRef = useRef(null);
+    const limit_page = 10;
 
     const fetchRooms = async (currentPage) => {
         try {
             const res = await getAdminRooms({
                 page: currentPage,
-                limit,
+                limit: limit_page,
                 ...activeFilters
             });
             setRooms(res.data.rooms || res.data);
@@ -61,7 +80,7 @@ export default function Rooms() {
         fetchProvinces();
     }, []);
 
-    // Fetch quận huyện khi tỉnh thay đổi (Vẫn giữ local state cho cái này vì nó cần logic phụ thuộc)
+    // Fetch quận huyện khi tỉnh thay đổi
     const [selectedCity, setSelectedCity] = useState('Chọn Tỉnh/Thành');
 
     useEffect(() => {
@@ -105,6 +124,7 @@ export default function Rooms() {
         setPage(1);
         setActiveFilters(defaultFilters);
     };
+
     const handleExport = async () => {
         const start = Date.now();
         console.log("%c[STREAMING] Bắt đầu xuất file...", "color: #10b981; font-weight: bold;");
@@ -153,6 +173,116 @@ export default function Rooms() {
         }
     };
 
+    const handleExportCloudinary = async () => {
+        try {
+            const response = await exportAdminRoomsCloudinaryApi(activeFilters);
+            if (response.data.success) {
+                setActiveJobId(response.data.jobId);
+            }
+        } catch (error) {
+            console.error("[CLOUDINARY] Lỗi:", error);
+        }
+    };
+
+    const handleImportExcel = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            toast.error("File quá lớn! Vui lòng chọn file dưới 5MB.");
+            e.target.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                // Hàm xử lý ngày tháng từ Excel
+                const formatExcelDate = (val) => {
+                    if (!val) return null;
+                    if (val instanceof Date) return val;
+                    // Nếu là chuỗi dạng DD/MM/YYYY
+                    if (typeof val === 'string' && val.includes('/')) {
+                        const [d, m, y] = val.split('/');
+                        return new Date(y, m - 1, d);
+                    }
+                    return val;
+                };
+
+                const rows = json.slice(1)
+                    // 1. Găm số dòng gốc vào trước
+                    .map((r, i) => ({ raw: r, excelRow: i + 1 }))
+                    // 2. GIỮ NGUYÊN logic lọc dòng trống của bạn
+                    .filter(item => item.raw.some(cell => cell !== null && cell !== undefined && cell.toString().trim() !== ""))
+                    // 3. Map sang định dạng gửi đi
+                    .map(item => {
+                        const r = item.raw;
+                        return {
+                            excelRow: item.excelRow,
+                            masterName: r[0]?.toString().trim(),
+                            masterPhone: r[1]?.toString().trim(),
+                            masterEmail: r[2]?.toString().trim(),
+                            masterAddress: r[3]?.toString().trim(),
+                            roomNumber: r[4]?.toString().trim(),
+                            title: r[5]?.toString().trim(),
+                            price: parseFloat(r[6]),
+                            area: r[7]?.toString().trim(),
+                            capacity: parseInt(r[8]),
+                            city: r[9]?.toString().trim(),
+                            district: r[10]?.toString().trim(),
+                            ward: r[11]?.toString().trim(),
+                            location: r[12]?.toString().trim(),
+                            description: r[13]?.toString().trim(),
+                            amenities: r[14]?.toString().trim(),
+                            isTrending: r[15]?.toString().toLowerCase() === "true" || r[15] === "1" || r[15]?.toString().toLowerCase() === "có",
+                            tenantName: r[17]?.toString().trim() || null,
+                            tenantPhone: r[18]?.toString().trim() || null,
+                            deposit: parseFloat(r[19]) || 0,
+                            startDate: formatExcelDate(r[20]),
+                            endDate: formatExcelDate(r[21])
+                        };
+                    });
+
+                if (rows.length === 0) {
+                    toast.error("File không có dữ liệu!");
+                    return;
+                }
+
+                if (rows.length > 100) {
+                    toast.error("Chỉ được nhập tối đa 100 dòng mỗi lần!");
+                    return;
+                }
+
+                const res = await importAdminRoomsApi(rows);
+                setImportResult({
+                    isOpen: true,
+                    errors: [],
+                    successMessage: res.data.message || "Nhập dữ liệu thành công!"
+                });
+                fetchRooms(page);
+            } catch (error) {
+                console.error("Lỗi xử lý file Excel:", error);
+                const errorData = error.response?.data;
+                setImportResult({
+                    isOpen: true,
+                    errors: errorData?.details || [errorData?.message || "Lỗi khi xử lý file Excel"],
+                    successMessage: ''
+                });
+            } finally {
+                e.target.value = "";
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    };
+
     const handleDeleteClick = (id) => {
         setSelectedRoomId(id);
         setIsModalOpen(true);
@@ -169,110 +299,30 @@ export default function Rooms() {
         }
     };
 
-    const handleNextPage = () => {
-        if (page < totalPages) setPage(page + 1);
-    };
-
-    const handlePrevPage = () => {
-        if (page > 1) setPage(page - 1);
-    };
-
     return (
         <div className="p-6 md:p-8 bg-gray-50 min-h-screen">
             <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Quản lý Phòng trọ</h2>
-                        <p className="text-sm text-gray-500 mt-1">Hệ thống toàn bộ phòng trọ đang hoạt động</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={handleExportBatch}
-                            disabled={isExportingBatch || isExporting}
-                            className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-amber-900/20 disabled:opacity-50"
-                        >
-                            {isExportingBatch ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                            Xuất batching
-                        </button>
 
-                        <button
-                            onClick={handleExport}
-                            disabled={isExporting || isExportingBatch}
-                            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50"
-                        >
-                            {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                            Xuất Stream
-                        </button>
-                    </div>
-                </div>
+                <RoomHeader
+                    handleExportBatch={handleExportBatch}
+                    handleExport={handleExport}
+                    handleExportCloudinary={handleExportCloudinary}
+                    handleImportExcel={handleImportExcel}
+                    isExporting={isExporting}
+                    isExportingBatch={isExportingBatch}
+                    activeJobId={activeJobId}
+                    fileInputRef={fileInputRef}
+                />
 
-                {/* Section Bộ lọc */}
-                <form onSubmit={handleSearch} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center">
-                    <div className="flex-1 min-w-[200px] relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            name="search"
-                            defaultValue={activeFilters.search}
-                            placeholder="Tìm số phòng, tiêu đề..."
-                            className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-                        />
-                    </div>
-
-                    <select
-                        name="status"
-                        defaultValue={activeFilters.status}
-                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
-                    >
-                        <option value="all">Tất cả trạng thái</option>
-                        <option value="0">Còn trống</option>
-                        <option value="1">Đã thuê</option>
-                        <option value="2">Đang chờ duyệt</option>
-                        <option value="3">Bảo trì</option>
-                    </select>
-
-                    <select
-                        name="city"
-                        value={selectedCity}
-                        onChange={(e) => setSelectedCity(e.target.value)}
-                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
-                    >
-                        <option value="Chọn Tỉnh/Thành">Tất cả Tỉnh/Thành</option>
-                        {provinces.map(p => (
-                            <option key={p.code} value={p.name}>{p.name}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        name="district"
-                        defaultValue={selectedCity === 'Chọn Tỉnh/Thành' ? 'Chọn Quận/Huyện' : ''}
-                        disabled={selectedCity === 'Chọn Tỉnh/Thành'}
-                        className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium disabled:opacity-50"
-                    >
-                        <option value="Chọn Quận/Huyện">Tất cả Quận/Huyện</option>
-                        {districts.map(d => (
-                            <option key={d.code} value={d.name}>{d.name}</option>
-                        ))}
-                    </select>
-
-                    <button
-                        type="submit"
-                        className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-6 py-2 rounded-lg font-bold text-sm transition-all shadow-md"
-                    >
-                        <Filter className="w-4 h-4" />
-                        Lọc tin
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={handleReset}
-                        className="p-2 text-gray-400 hover:text-rose-500 transition-colors"
-                        title="Đặt lại bộ lọc"
-                    >
-                        <RefreshCcw className="w-4 h-4" />
-                    </button>
-
-                </form>
+                <RoomFilter
+                    activeFilters={activeFilters}
+                    handleSearch={handleSearch}
+                    handleReset={handleReset}
+                    selectedCity={selectedCity}
+                    setSelectedCity={setSelectedCity}
+                    provinces={provinces}
+                    districts={districts}
+                />
 
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <RoomTable
@@ -281,28 +331,12 @@ export default function Rooms() {
                         onEdit={(room) => console.log("Edit room", room)}
                     />
 
-                    {/* Component Phân trang */}
-                    <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-                        <span className="text-sm text-gray-500">
-                            Trang <span className="font-medium text-gray-900">{page}</span> / <span className="font-medium text-gray-900">{totalPages}</span>
-                        </span>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={handlePrevPage}
-                                disabled={page === 1}
-                                className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${page === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
-                            >
-                                Trang trước
-                            </button>
-                            <button
-                                onClick={handleNextPage}
-                                disabled={page === totalPages}
-                                className={`px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${page === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
-                            >
-                                Trang kế
-                            </button>
-                        </div>
-                    </div>
+                    <RoomPagination
+                        page={page}
+                        totalPages={totalPages}
+                        handlePrevPage={() => page > 1 && setPage(page - 1)}
+                        handleNextPage={() => page < totalPages && setPage(page + 1)}
+                    />
                 </div>
             </div>
 
@@ -312,6 +346,20 @@ export default function Rooms() {
                 onConfirm={confirmDelete}
                 title="Xác nhận xóa phòng?"
                 message="Hành động này không thể hoàn tác. Dữ liệu phòng sẽ bị xóa vĩnh viễn khỏi hệ thống."
+            />
+
+            {activeJobId && (
+                <ExportStatusWidget
+                    jobId={activeJobId}
+                    onClose={() => setActiveJobId(null)}
+                    onFinish={(url) => console.log("Export finished! URL:", url)}
+                />
+            )}
+            <ImportResultModal
+                isOpen={importResult.isOpen}
+                onClose={() => setImportResult(prev => ({ ...prev, isOpen: false }))}
+                errors={importResult.errors}
+                successMessage={importResult.successMessage}
             />
         </div>
     );
