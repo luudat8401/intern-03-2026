@@ -5,10 +5,10 @@ const validate = (dtoFunction) => {
       req.body = cleanedData;
       next();
     } catch (err) {
-      if (err.name === "ValidationError") {
+      if (err.name === "ValidationError" || err.name === "ImportValidationError") {
         return res.status(400).json({
-          message: "Dữ liệu đầu vào không hợp lệ",
-          errors: err.errors,
+          message: err.message || "Dữ liệu đầu vào không hợp lệ",
+          details: err.details || err.errors,
         });
       }
 

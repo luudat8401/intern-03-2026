@@ -15,6 +15,7 @@ module.exports = new EntitySchema({
     },
     phone: {
       type: "varchar",
+      unique: true,
       nullable: false
     },
     isRepresentative: {

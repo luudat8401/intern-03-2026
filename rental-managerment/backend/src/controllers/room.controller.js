@@ -1,4 +1,6 @@
 const roomService = require("../services/room.service");
+const roomImportService = require("../services/room-import");
+const roomExportService = require("../services/room-export.service");
 
 class RoomController {
   async getAllRoomsForAdmin(req, res) {
@@ -12,23 +14,9 @@ class RoomController {
 
   async exportRoomsToExcel(req, res) {
     try {
-      await roomService.exportRoomsToExcel(res, req.query);
+      await roomExportService.exportRoomsToExcel(res, req.query);
     } catch (err) {
       console.error("Export Controller Error:", err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: err.message || "Export error" });
-      } else {
-        // Nếu header đã gửi rồi (đang dở file), ta chỉ có thể kết thúc response
-        res.end();
-      }
-    }
-  }
-
-  async exportRoomsBatch(req, res) {
-    try {
-      await roomService.exportRoomsToExcelBatch(res, req.query);
-    } catch (err) {
-      console.error("Batch Export Error:", err);
       if (!res.headersSent) {
         res.status(500).json({ error: err.message || "Export error" });
       } else {
@@ -121,6 +109,24 @@ class RoomController {
       res.json(result);
     } catch (err) {
       res.status(500).json({ error: err.message });
+    }
+  }
+
+
+  async importRooms(req, res) {
+    try {
+      const { data } = req.body;
+      if (!data || !Array.isArray(data)) {
+        return res.status(400).json({ error: "Dữ liệu không hợp lệ (Expect JSON Array)." });
+      }
+      const result = await roomImportService.importRooms(data);
+      res.json(result);
+    } catch (err) {
+      console.error("❌ LỖI IMPORT:", err.message);
+      res.status(400).json({
+        message: err.message,
+        details: err.details || [err.message]
+      });
     }
   }
 }
