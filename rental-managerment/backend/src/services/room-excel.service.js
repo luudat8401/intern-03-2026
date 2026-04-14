@@ -113,8 +113,65 @@ class RoomExcelService {
         reject(err);
       });
     });
-  }
+  }  /**
+   * Tải file Excel mẫu với Dropdown và định dạng chuẩn
+   */
+  async downloadSampleExcel(res) {
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Sample Import');
 
+    const headers = [
+      "Họ tên Chủ trọ", "SĐT Chủ trọ", "Email Chủ trọ", "Địa chỉ Chủ trọ",
+      "Số phòng", "Tiêu đề phòng", "Giá thuê (số)", "Diện tích (m2)",
+      "Sức chứa (số)", "Tỉnh/Thành", "Quận/Huyện", "Phường/Xã",
+      "Địa chỉ chi tiết", "Mô tả", "Tiện ích (cách nhau bởi dấu phẩy)",
+      "Nổi bật (Có/Không)", "Trạng thái (Chọn từ danh sách)",
+      "Họ tên người thuê", "SĐT người thuê", "Tiền cọc (số)",
+      "Ngày bắt đầu (dd/mm/yyyy)", "Ngày kết thúc (dd/mm/yyyy)"
+    ];
+
+    worksheet.addRow(headers);
+
+    // Định dạng Header
+    worksheet.getRow(1).font = { bold: true };
+    worksheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFD3D3D3' }
+    };
+    
+    // Tạo Dropdown cho 100 dòng đầu tiên
+    for (let i = 2; i <= 100; i++) {
+        worksheet.getCell(`P${i}`).dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: ['"Có,Không"'],
+            showErrorMessage: true,
+            errorTitle: 'Lỗi nhập liệu',
+            error: 'Vui lòng chọn giá trị từ danh sách.'
+        };
+        worksheet.getCell(`Q${i}`).dataValidation = {
+            type: 'list',
+            allowBlank: true,
+            formulae: ['"Trống,Đã thuê,Bảo trì,Đã xóa"'],
+            showErrorMessage: true,
+            errorTitle: 'Lỗi nhập liệu',
+            error: 'Vui lòng chọn trạng thái từ danh sách.'
+        };
+    }
+
+    // Set độ rộng cột
+    worksheet.columns.forEach(column => {
+        column.width = 25;
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=File_Mau_Import_Phong.xlsx');
+
+    await workbook.xlsx.write(res);
+    res.end();
+  }
 
 
   /**

@@ -137,6 +137,14 @@ class RoomController {
     }
   }
 
+  async downloadSample(req, res) {
+    try {
+      await roomExcelService.downloadSampleExcel(res);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  }
+
   async importRooms(req, res) {
     try {
       const { data } = req.body;

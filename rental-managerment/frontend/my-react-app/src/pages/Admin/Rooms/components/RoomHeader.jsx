@@ -1,12 +1,12 @@
+import React from 'react';
 import { FileSpreadsheet, RefreshCcw, Cloud, Upload } from "lucide-react";
 
 export default function RoomHeader({ 
     handleExport, 
     handleExportCloudinary, 
-    handleImportExcel, 
+    setOpenImportModal,
     isExporting, 
-    activeJobId, 
-    fileInputRef 
+    activeJobId
 }) {
     return (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -15,6 +15,14 @@ export default function RoomHeader({
                 <p className="text-sm text-gray-500 mt-1">Hệ thống toàn bộ phòng trọ đang hoạt động</p>
             </div>
             <div className="flex gap-3">
+                <button
+                    onClick={() => setOpenImportModal(true)}
+                    className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-900/20"
+                >
+                    <Upload className="w-4 h-4" />
+                    Nhập dữ liệu Excel
+                </button>
+
                 <button
                     onClick={handleExport}
                     disabled={isExporting}
@@ -31,21 +39,6 @@ export default function RoomHeader({
                 >
                     <Cloud className="w-4 h-4" />
                     Xuất Cloud
-                </button>
-
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImportExcel}
-                    accept=".xlsx, .xls"
-                    className="hidden"
-                />
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-900/20 disabled:opacity-50"
-                >
-                    <Upload className="w-4 h-4" />
-                    Nhập file
                 </button>
             </div>
         </div>

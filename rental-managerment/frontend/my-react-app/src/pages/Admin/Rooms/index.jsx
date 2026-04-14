@@ -9,6 +9,7 @@ import RoomHeader from "./components/RoomHeader";
 import RoomFilter from "./components/RoomFilter";
 import RoomPagination from "./components/RoomPagination";
 import ImportResultModal from "./components/ImportResultModal";
+import ImportRoomModal from "./components/ImportRoomModal";
 import DeleteConfirmModal from "../../../components/Common/DeleteConfirmModal";
 import ExportStatusWidget from "../../../components/Common/ExportStatusWidget";
 
@@ -17,7 +18,6 @@ import {
     getAdminRooms,
     deleteRoomApi,
     exportAdminRoomsApi,
-    exportAdminRoomsBatchApi,
     exportAdminRoomsCloudinaryApi,
     importAdminRoomsApi
 } from "../../../api/room.api";
@@ -39,19 +39,20 @@ export default function Rooms() {
 
     const [isExporting, setIsExporting] = useState(false);
     const [activeJobId, setActiveJobId] = useState(null);
+    const [isOpenImportModal, setIsOpenImportModal] = useState(false);
     const [importResult, setImportResult] = useState({
         isOpen: false,
         errors: [],
         successMessage: ''
     });
-    const fileInputRef = useRef(null);
-    const limit_page = 10;
+    const limitPage = 10;
+    const [isImporting, setIsImporting] = useState(false);
 
     const fetchRooms = async (currentPage) => {
         try {
             const res = await getAdminRooms({
                 page: currentPage,
-                limit: limit_page,
+                limit: limitPage,
                 ...activeFilters
             });
             setRooms(res.data.rooms || res.data);
@@ -162,6 +163,7 @@ export default function Rooms() {
     };
 
     const handleImportExcel = async (e) => {
+        setIsOpenImportModal(false);
         const file = e.target.files[0];
         if (!file) return;
 
@@ -315,10 +317,9 @@ export default function Rooms() {
                 <RoomHeader
                     handleExport={handleExport}
                     handleExportCloudinary={handleExportCloudinary}
-                    handleImportExcel={handleImportExcel}
+                    setOpenImportModal={setIsOpenImportModal}
                     isExporting={isExporting}
                     activeJobId={activeJobId}
-                    fileInputRef={fileInputRef}
                 />
 
                 <RoomFilter
@@ -346,6 +347,13 @@ export default function Rooms() {
                     />
                 </div>
             </div>
+
+            <ImportRoomModal
+                isOpen={isOpenImportModal}
+                onClose={() => setIsOpenImportModal(false)}
+                onImport={handleImportExcel}
+                isImporting={isImporting}
+            />
 
             <DeleteConfirmModal
                 isOpen={isModalOpen}

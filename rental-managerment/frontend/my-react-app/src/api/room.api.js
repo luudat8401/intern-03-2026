@@ -18,3 +18,4 @@ export const exportAdminRoomsApi = (params) => axios.get("/rooms/admin/export", 
 export const exportAdminRoomsCloudinaryApi = (params) => axios.post("/rooms/admin/export-cloudinary", {}, { params });
 export const getExportStatusApi = (jobId) => axios.get(`/rooms/admin/export-status/${jobId}`);
 export const importAdminRoomsApi = (data) => axios.post("/rooms/admin/import", { data });
+export const downloadTemplateApi = () => axios.get("/rooms/admin/download-sample", { responseType: 'blob' });
