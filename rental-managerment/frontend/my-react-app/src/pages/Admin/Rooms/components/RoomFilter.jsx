@@ -1,13 +1,13 @@
 import { Search, Filter, RefreshCcw } from "lucide-react";
 
-export default function RoomFilter({ 
-    activeFilters, 
-    handleSearch, 
-    handleReset, 
-    selectedCity, 
-    setSelectedCity, 
-    provinces, 
-    districts 
+export default function RoomFilter({
+    activeFilters,
+    handleSearch,
+    handleReset,
+    selectedCity,
+    setSelectedCity,
+    provinces,
+    districts
 }) {
     return (
         <form onSubmit={handleSearch} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center">

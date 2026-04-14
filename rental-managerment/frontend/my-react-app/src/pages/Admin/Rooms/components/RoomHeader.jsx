@@ -1,14 +1,10 @@
-import { FileSpreadsheet, RefreshCcw, Cloud, Upload } from "lucide-react";
+import React from 'react';
+import { FileSpreadsheet, RefreshCcw, Upload } from "lucide-react";
 
-export default function RoomHeader({ 
-    handleExportBatch, 
-    handleExport, 
-    handleExportCloudinary, 
-    handleImportExcel, 
-    isExporting, 
-    isExportingBatch, 
-    activeJobId, 
-    fileInputRef 
+export default function RoomHeader({
+    handleExport,
+    setOpenImportModal,
+    isExporting
 }) {
     return (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -18,45 +14,20 @@ export default function RoomHeader({
             </div>
             <div className="flex gap-3">
                 <button
-                    onClick={handleExportBatch}
-                    disabled={isExportingBatch || isExporting}
-                    className="flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-amber-900/20 disabled:opacity-50"
+                    onClick={() => setOpenImportModal(true)}
+                    className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-900/20"
                 >
-                    {isExportingBatch ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                    Xuất batching
+                    <Upload className="w-4 h-4" />
+                    Nhập dữ liệu Excel
                 </button>
 
                 <button
                     onClick={handleExport}
-                    disabled={isExporting || isExportingBatch}
+                    disabled={isExporting}
                     className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-emerald-900/20 disabled:opacity-50"
                 >
                     {isExporting ? <RefreshCcw className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
-                    Xuất Stream
-                </button>
-
-                <button
-                    onClick={handleExportCloudinary}
-                    disabled={!!activeJobId}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-900/20 disabled:opacity-50"
-                >
-                    <Cloud className="w-4 h-4" />
-                    Xuất Cloud
-                </button>
-
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImportExcel}
-                    accept=".xlsx, .xls"
-                    className="hidden"
-                />
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-rose-900/20 disabled:opacity-50"
-                >
-                    <Upload className="w-4 h-4" />
-                    Nhập file
+                    Xuất Excel
                 </button>
             </div>
         </div>

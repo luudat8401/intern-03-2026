@@ -21,7 +21,8 @@ class RoomService {
 
     if (query.status !== undefined && query.status !== 'all') {
       queryBuilder.where("room.status = :status", { status: parseInt(query.status) });
-    } else {
+    } else if (query.status === undefined) {
+      // Mặc định chỉ hiện phòng trống cho khách hàng nếu không có filter cụ thể
       queryBuilder.where("room.status = :status", { status: 0 });
     }
 

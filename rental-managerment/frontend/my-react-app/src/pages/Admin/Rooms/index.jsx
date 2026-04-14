@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import * as XLSX from "xlsx";
 import { toast } from "react-hot-toast";
+import { importRowSchema } from "../../../schemas/import-room.schema";
 
 // Components
 import RoomTable from "./components/RoomTable";
@@ -8,16 +9,14 @@ import RoomHeader from "./components/RoomHeader";
 import RoomFilter from "./components/RoomFilter";
 import RoomPagination from "./components/RoomPagination";
 import ImportResultModal from "./components/ImportResultModal";
+import ImportRoomModal from "./components/ImportRoomModal";
 import DeleteConfirmModal from "../../../components/Common/DeleteConfirmModal";
-import ExportStatusWidget from "../../../components/Common/ExportStatusWidget";
 
 // APIs
 import {
     getAdminRooms,
     deleteRoomApi,
     exportAdminRoomsApi,
-    exportAdminRoomsBatchApi,
-    exportAdminRoomsCloudinaryApi,
     importAdminRoomsApi
 } from "../../../api/room.api";
 
@@ -37,21 +36,20 @@ export default function Rooms() {
     const [districts, setDistricts] = useState([]);
 
     const [isExporting, setIsExporting] = useState(false);
-    const [isExportingBatch, setIsExportingBatch] = useState(false);
-    const [activeJobId, setActiveJobId] = useState(null);
+    const [isOpenImportModal, setIsOpenImportModal] = useState(false);
     const [importResult, setImportResult] = useState({
         isOpen: false,
         errors: [],
         successMessage: ''
     });
-    const fileInputRef = useRef(null);
-    const limit_page = 10;
+    const limitPage = 10;
+    const [isImporting, setIsImporting] = useState(false);
 
     const fetchRooms = async (currentPage) => {
         try {
             const res = await getAdminRooms({
                 page: currentPage,
-                limit: limit_page,
+                limit: limitPage,
                 ...activeFilters
             });
             setRooms(res.data.rooms || res.data);
@@ -149,42 +147,10 @@ export default function Rooms() {
         }
     };
 
-    const handleExportBatch = async () => {
-        const start = Date.now();
-        console.log("%c[BATCH] Bắt đầu xuất theo lô (10.000 dòng/lô)...", "color: #f59e0b; font-weight: bold;");
-        try {
-            setIsExportingBatch(true);
-            const response = await exportAdminRoomsBatchApi(activeFilters);
 
-            const totalTime = Date.now() - start;
-            console.log(`%c[BATCH] Hoàn thành! Tổng thời gian: ${totalTime}ms`, "color: #f59e0b; font-weight: bold;");
-
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `Batch_Export_${new Date().getTime()}.xlsx`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-        } catch (error) {
-            console.error("[BATCH] Lỗi:", error);
-        } finally {
-            setIsExportingBatch(false);
-        }
-    };
-
-    const handleExportCloudinary = async () => {
-        try {
-            const response = await exportAdminRoomsCloudinaryApi(activeFilters);
-            if (response.data.success) {
-                setActiveJobId(response.data.jobId);
-            }
-        } catch (error) {
-            console.error("[CLOUDINARY] Lỗi:", error);
-        }
-    };
 
     const handleImportExcel = async (e) => {
+        setIsOpenImportModal(false);
         const file = e.target.files[0];
         if (!file) return;
 
@@ -208,21 +174,27 @@ export default function Rooms() {
                 // Hàm xử lý ngày tháng từ Excel
                 const formatExcelDate = (val) => {
                     if (!val) return null;
-                    if (val instanceof Date) return val;
-                    // Nếu là chuỗi dạng DD/MM/YYYY
-                    if (typeof val === 'string' && val.includes('/')) {
+
+                    let date;
+                    if (val instanceof Date) {
+                        date = val;
+                    } else if (typeof val === 'number') {
+                        date = new Date(Math.round((val - 25569) * 86400 * 1000));
+                    } else if (typeof val === 'string' && val.includes('/')) {
                         const [d, m, y] = val.split('/');
-                        return new Date(y, m - 1, d);
+                        return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${y}`;
+                    } else {
+                        return val;
                     }
-                    return val;
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    return `${day}/${month}/${year}`;
                 };
 
                 const rows = json.slice(1)
-                    // 1. Găm số dòng gốc vào trước
                     .map((r, i) => ({ raw: r, excelRow: i + 1 }))
-                    // 2. GIỮ NGUYÊN logic lọc dòng trống của bạn
                     .filter(item => item.raw.some(cell => cell !== null && cell !== undefined && cell.toString().trim() !== ""))
-                    // 3. Map sang định dạng gửi đi
                     .map(item => {
                         const r = item.raw;
                         return {
@@ -243,6 +215,7 @@ export default function Rooms() {
                             description: r[13]?.toString().trim(),
                             amenities: r[14]?.toString().trim(),
                             isTrending: r[15]?.toString().toLowerCase() === "true" || r[15] === "1" || r[15]?.toString().toLowerCase() === "có",
+                            status: r[16]?.toString().trim() || "Trống",
                             tenantName: r[17]?.toString().trim() || null,
                             tenantPhone: r[18]?.toString().trim() || null,
                             deposit: parseFloat(r[19]) || 0,
@@ -261,22 +234,83 @@ export default function Rooms() {
                     return;
                 }
 
-                const res = await importAdminRoomsApi(rows);
-                setImportResult({
-                    isOpen: true,
-                    errors: [],
-                    successMessage: res.data.message || "Nhập dữ liệu thành công!"
-                });
-                fetchRooms(page);
+                // --- VALIDATE FRONTEND TỔNG THỂ ---
+                const validationErrors = [];
+                const seenRoomNumbers = new Set();
+
+                for (const row of rows) {
+                    const rowLabel = row.excelRow;
+                    
+                    // 1. Validate định dạng (Yup)
+                    try {
+                        await importRowSchema.validate(row, { abortEarly: false });
+                    } catch (err) {
+                        err.inner.forEach(e => {
+                            validationErrors.push(`Dòng ${rowLabel}: ${e.message}`);
+                        });
+                    }
+
+                    // 2. Validate trùng lặp trong file
+                    if (row.roomNumber) {
+                        if (seenRoomNumbers.has(row.roomNumber)) {
+                            validationErrors.push(`Dòng ${rowLabel}: Số phòng "${row.roomNumber}" bị trùng lặp trong chính file Excel.`);
+                        }
+                        seenRoomNumbers.add(row.roomNumber);
+                    }
+
+                    // 3. Kiểm tra logic Hợp đồng (Nếu có người thuê)
+                    const hasTenantInfo = !!(row.tenantPhone || row.tenantName);
+                    const hasContractInfo = !!(row.startDate || row.endDate || row.deposit);
+
+                    if (hasTenantInfo || hasContractInfo) {
+                        if (!row.tenantPhone) validationErrors.push(`Dòng ${rowLabel}: Thiếu SĐT người thuê.`);
+                        if (!row.tenantName) validationErrors.push(`Dòng ${rowLabel}: Thiếu Họ tên người thuê.`);
+                        if (!row.startDate) validationErrors.push(`Dòng ${rowLabel}: Thiếu Ngày bắt đầu hợp đồng.`);
+                        if (!row.endDate) validationErrors.push(`Dòng ${rowLabel}: Thiếu Ngày kết thúc hợp đồng.`);
+                        if (!row.status) validationErrors.push(`Dòng ${rowLabel}: Có thông tin thuê nhưng thiếu Trạng thái phòng.`);
+                        else if (row.status !== "Đã thuê") validationErrors.push(`Dòng ${rowLabel}: Có người thuê thì trạng thái phòng phải là "Đã thuê".`);
+                    } else if (row.status === "Đã thuê") {
+                        validationErrors.push(`Dòng ${rowLabel}: Trạng thái phòng là "Đã thuê" nhưng không có thông tin người thuê và hợp đồng.`);
+                    }
+                }
+
+                if (validationErrors.length > 0) {
+                    setImportResult({
+                        isOpen: true,
+                        errors: validationErrors.slice(0, 100), // Hiển thị tối đa 100 lỗi
+                        successMessage: ''
+                    });
+                    setIsImporting(false);
+                    e.target.value = "";
+                    return;
+                }
+                // -------------------------
+
+                setIsImporting(true);
+                try {
+                    const res = await importAdminRoomsApi(rows);
+                    setImportResult({
+                        isOpen: true,
+                        errors: [],
+                        successMessage: res.data.message || "Nhập dữ liệu thành công!"
+                    });
+                    fetchRooms(page);
+                } catch (error) {
+                    console.error("Lỗi xử lý gọi API Import:", error);
+                    const errorData = error.response?.data;
+                    setImportResult({
+                        isOpen: true,
+                        errors: errorData?.details || [errorData?.error || errorData?.message || "Lỗi khi xử lý lưu dữ liệu"],
+                        successMessage: ''
+                    });
+                } finally {
+                    setIsImporting(false);
+                    e.target.value = "";
+                }
             } catch (error) {
-                console.error("Lỗi xử lý file Excel:", error);
-                const errorData = error.response?.data;
-                setImportResult({
-                    isOpen: true,
-                    errors: errorData?.details || [errorData?.message || "Lỗi khi xử lý file Excel"],
-                    successMessage: ''
-                });
-            } finally {
+                console.error("Lỗi đọc/phân tích file Excel:", error);
+                toast.error("Đã có lỗi xảy ra khi đọc file!");
+                setIsImporting(false);
                 e.target.value = "";
             }
         };
@@ -304,14 +338,9 @@ export default function Rooms() {
             <div className="max-w-7xl mx-auto space-y-6">
 
                 <RoomHeader
-                    handleExportBatch={handleExportBatch}
                     handleExport={handleExport}
-                    handleExportCloudinary={handleExportCloudinary}
-                    handleImportExcel={handleImportExcel}
+                    setOpenImportModal={setIsOpenImportModal}
                     isExporting={isExporting}
-                    isExportingBatch={isExportingBatch}
-                    activeJobId={activeJobId}
-                    fileInputRef={fileInputRef}
                 />
 
                 <RoomFilter
@@ -340,6 +369,13 @@ export default function Rooms() {
                 </div>
             </div>
 
+            <ImportRoomModal
+                isOpen={isOpenImportModal}
+                onClose={() => setIsOpenImportModal(false)}
+                onImport={handleImportExcel}
+                isImporting={isImporting}
+            />
+
             <DeleteConfirmModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -347,14 +383,6 @@ export default function Rooms() {
                 title="Xác nhận xóa phòng?"
                 message="Hành động này không thể hoàn tác. Dữ liệu phòng sẽ bị xóa vĩnh viễn khỏi hệ thống."
             />
-
-            {activeJobId && (
-                <ExportStatusWidget
-                    jobId={activeJobId}
-                    onClose={() => setActiveJobId(null)}
-                    onFinish={(url) => console.log("Export finished! URL:", url)}
-                />
-            )}
             <ImportResultModal
                 isOpen={importResult.isOpen}
                 onClose={() => setImportResult(prev => ({ ...prev, isOpen: false }))}

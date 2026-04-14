@@ -15,7 +15,4 @@ export const updateRoomApi = (id, formData) => axios.put(`/rooms/${id}`, formDat
 
 export const deleteRoomApi = (id) => axios.delete(`/rooms/${id}`);
 export const exportAdminRoomsApi = (params) => axios.get("/rooms/admin/export", { params, responseType: 'blob' });
-export const exportAdminRoomsBatchApi = (params) => axios.get("/rooms/admin/export-batch", { params, responseType: 'blob' });
-export const exportAdminRoomsCloudinaryApi = (params) => axios.post("/rooms/admin/export-cloudinary", {}, { params });
-export const getExportStatusApi = (jobId) => axios.get(`/rooms/admin/export-status/${jobId}`);
 export const importAdminRoomsApi = (data) => axios.post("/rooms/admin/import", { data });

@@ -1,5 +1,6 @@
 const roomService = require("../services/room.service");
-const roomExcelService = require("../services/room-excel.service");
+const roomImportService = require("../services/room-import");
+const roomExportService = require("../services/room-export.service");
 
 class RoomController {
   async getAllRoomsForAdmin(req, res) {
@@ -13,22 +14,9 @@ class RoomController {
 
   async exportRoomsToExcel(req, res) {
     try {
-      await roomExcelService.exportRoomsToExcel(res, req.query);
+      await roomExportService.exportRoomsToExcel(res, req.query);
     } catch (err) {
       console.error("Export Controller Error:", err);
-      if (!res.headersSent) {
-        res.status(500).json({ error: err.message || "Export error" });
-      } else {
-        res.end();
-      }
-    }
-  }
-
-  async exportRoomsBatch(req, res) {
-    try {
-      await roomExcelService.exportRoomsToExcelBatch(res, req.query);
-    } catch (err) {
-      console.error("Batch Export Error:", err);
       if (!res.headersSent) {
         res.status(500).json({ error: err.message || "Export error" });
       } else {
@@ -124,29 +112,6 @@ class RoomController {
     }
   }
 
-  // --- ASYNC CLOUD EXCEL EXPORT (GOOGLE DRIVE STYLE) ---
-
-  async exportRoomsToCloudinary(req, res) {
-    try {
-      const jobId = `job_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      roomExcelService.exportRoomsToCloudinary(jobId, req.query);
-      res.json({ success: true, jobId });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
-
-  async getExportStatus(req, res) {
-    try {
-      const status = roomExcelService.getExportStatus(req.params.jobId);
-      if (!status) {
-        return res.status(404).json({ error: "Job không tồn tại" });
-      }
-      res.json(status);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  }
 
   async importRooms(req, res) {
     try {
@@ -154,11 +119,10 @@ class RoomController {
       if (!data || !Array.isArray(data)) {
         return res.status(400).json({ error: "Dữ liệu không hợp lệ (Expect JSON Array)." });
       }
-      const result = await roomExcelService.importRooms(data);
+      const result = await roomImportService.importRooms(data);
       res.json(result);
     } catch (err) {
       console.error("❌ LỖI IMPORT:", err.message);
-      // Trả về định dạng lỗi chuẩn hóa cho Frontend Modal
       res.status(400).json({
         message: err.message,
         details: err.details || [err.message]

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import StatsGrid from "./components/StatsGrid";
 import RecentRooms from "./components/RecentRooms";
-import { getRooms } from "../../../api/room.api";
+import { getAdminRooms } from "../../../api/room.api";
 import { getUsers } from "../../../api/user.api";
 import { getContracts } from "../../../api/contract.api";
 import { getMasters } from "../../../api/master.api";
@@ -15,7 +15,7 @@ export default function Dashboard() {
   const fetchData = useCallback(async () => {
     try {
       const [roomsRes, usersRes, contractsRes, mastersRes] = await Promise.all([
-        getRooms({ limit: 1000, status: 'all' }),
+        getAdminRooms({ limit: 1000, status: 'all' }),
         getUsers(),
         getContracts(),
         getMasters()
@@ -33,12 +33,16 @@ export default function Dashboard() {
     fetchData();
   }, [fetchData]);
 
+  // Định nghĩa các mã trạng thái để code clean hơn
+  const ROOM_STATUS = { VACANT: 0, RENTED: 1, MAINTENANCE: 3 };
+  const CONTRACT_STATUS = { ACTIVE: 1 };
+
   const stats = useMemo(() => {
     return {
       totalRooms: Array.isArray(rooms) ? rooms.length : 0,
-      rentedRooms: Array.isArray(rooms) ? rooms.filter(r => r.status === "Đã thuê" || r.status === 1).length : 0,
+      rentedRooms: Array.isArray(rooms) ? rooms.filter(r => r.status === ROOM_STATUS.RENTED).length : 0,
       totalUsers: Array.isArray(users) ? users.length : 0,
-      activeContracts: Array.isArray(contracts) ? contracts.filter(c => c.status === "active" || c.status === 1).length : 0,
+      activeContracts: Array.isArray(contracts) ? contracts.filter(c => c.status === CONTRACT_STATUS.ACTIVE).length : 0,
       totalMasters: Array.isArray(masters) ? masters.length : 0
     };
   }, [rooms, users, contracts, masters]);
