@@ -49,10 +49,10 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    FRONTEND (React)                     │
-│  ┌───────────┐  ┌───────────┐  ┌──────────────────┐    │
-│  │   Admin   │  │  Master   │  │   Tenant (User)  │    │
-│  │  Layout   │  │  Layout   │  │     Layout       │    │
-│  └─────┬─────┘  └─────┬─────┘  └────────┬─────────┘    │
+│  ┌───────────┐  ┌───────────┐  ┌──────────────────┐     │
+│  │   Admin   │  │  Master   │  │   Tenant (User)  │     │
+│  │  Layout   │  │  Layout   │  │     Layout       │     │
+│  └─────┬─────┘  └─────┬─────┘  └────────┬─────────┘     │
 │        │              │                  │              │
 │        └──────────────┼──────────────────┘              │
 │                       │                                 │
@@ -76,7 +76,7 @@
 │    └──────────────────┬──────────────────┘              │
 │                       │                                 │
 │    ┌──────────────────▼──────────────────┐              │
-│    │         Middleware Layer             │              │
+│    │         Middleware Layer             │             │
 │    │  verifyToken │ checkRole │ validate │              │
 │    └──────────────────┬──────────────────┘              │
 │                       │                                 │
@@ -89,7 +89,7 @@
 │    ┌──────────────────▼──────────────────┐              │
 │    │         Service Layer               │              │
 │    │  Business logic chính (CRUD, phân   │              │
-│    │  trang, thống kê, xóa mềm...)      │              │
+│    │  trang, thống kê, xóa mềm...)      │               │
 │    └──────────────────┬──────────────────┘              │
 │                       │                                 │
 │    ┌──────────────────▼──────────────────┐              │
@@ -124,7 +124,8 @@ rental-managerment/
 │       │   ├── auth.dto.js
 │       │   ├── room.dto.js
 │       │   ├── user.dto.js
-│       │   └── master.dto.js
+│       │   ├── master.dto.js
+│       │   └── import-room.dto.js   # DTO cho chức năng Import Excel
 │       ├── middleware/
 │       │   ├── auth.middleware.js    # verifyToken, checkRole
 │       │   └── validation.middleware.js  # Middleware validate qua DTO
@@ -147,7 +148,12 @@ rental-managerment/
 │       │   ├── room.service.js
 │       │   ├── user.service.js
 │       │   ├── master.service.js
-│       │   └── contract.service.js
+│       │   ├── contract.service.js
+│       │   ├── room-export.service.js  # Service xuất file Excel
+│       │   └── room-import/            # Module Import Excel phức hợp
+│       │       ├── index.js            # Entry point
+│       │       ├── storage.js          # Xử lý Database & Transaction
+│       │       └── validator.js        # Xử lý logic kiểm tra đa tầng
 │       ├── app.js                   # Express app setup
 │       └── server.js                # Khởi chạy server (port 3000)
 │
@@ -630,11 +636,64 @@ yarn dev       # hoặc npm run dev
 
 ---
 
-## 12. Hướng phát triển tiếp theo
+## 13. Hệ thống Excel Import & Export
 
-- [ ] Tạo API thống kê chuyên biệt (`/api/stats`) cho Dashboard thay vì gọi `limit: 1000`.
+Hệ thống Import/Export được thiết kế để xử lý lô dữ liệu lớn một cách an toàn và chuyên nghiệp.
+
+### 13.1. Kiến trúc Import 3 lớp (Backend)
+
+Sử dụng mô hình phân tách trách nhiệm cao:
+1.  **Entry Service (`index.js`)**: Nhận dữ liệu JSON từ Frontend, điều phối quá trình kiểm tra và lưu trữ.
+2.  **Validator Layer (`validator.js`)**: 
+    - Kiểm tra cấu trúc nội bộ file (trùng lặp roomNumber trong file).
+    - Đối soát dữ liệu địa chính thực tế (API Provinces).
+    - Kiểm tra xung đột logic với Database (SĐT/Email đã tồn tại).
+    - Log chi tiết full dữ liệu dòng lỗi để debug.
+3.  **Storage Layer (`storage.js`)**: 
+    - Thực thi trong một **Database Transaction** duy nhất (Nguyên tử hóa).
+    - **Identity Resolution**: Tự động giải quyết định danh Master/Tenant dựa trên SĐT/Email.
+    - **Auto-Account**: Tự động tạo Account cho người dùng mới kèm mật khẩu mặc định.
+
+### 13.2. Sơ đồ luồng (Sequence Diagram)
+
+```mermaid
+sequenceDiagram
+    participant U as Admin (Frontend)
+    participant V as Validator (Back)
+    participant S as Storage (Back)
+    participant DB as Database
+
+    U->>U: Map Header động & Parse Excel
+    U->>V: Gửi danh sách Rows
+    V->>V: Kiểm tra logic & Địa chính
+    V->>DB: Kiểm tra SĐT/Email tồn tại
+    
+    ALT Dữ liệu lỗi
+        V-->>U: Trả về lỗi chi tiết + Log Terminal
+    ELSE Dữ liệu sạch
+        V->>S: Chuyển dữ liệu đã kiểm tra
+        S->>DB: Bắt đầu TRANSACTION
+        S->>DB: Tạo/Link Master & Tenant
+        S->>DB: Lưu Room & Contract
+        S->>DB: COMMIT TRANSACTION
+        S-->>U: Trả về Thành công + RecentData
+    END
+    U->>U: Hiển thị popup "Thay đổi gần nhất"
+```
+
+### 13.3. Các tính năng cao cấp
+- **Header Mapping động**: Không phụ thuộc vào thứ tự cột trong file Excel, hệ thống tìm cột theo tên nhãn.
+- **Recent Changes Popup**: Lưu lại các dòng vừa import thành công trong phiên làm việc để Admin đối soát nhanh qua nút "Thay đổi gần nhất".
+- **Export đồng bộ**: File Excel xuất ra có định dạng cột và nhãn tiêu đề (labels) khớp hoàn toàn với mẫu file Import, hỗ trợ quy trình "Xuất -> Sửa -> Nhập" mượt mà.
+
+---
+
+## 14. Hướng phát triển tiếp theo
+
+- [x] Triển khai hệ thống Excel Import/Export chuyên sâu.
+- [ ] Tạo API thống kê chuyên biệt (`/api/stats`) cho Dashboard.
 - [ ] Thêm chức năng khôi phục phòng/hợp đồng đã xóa mềm cho Admin.
 - [ ] Áp dụng giao diện Tailwind CSS cho trang Tenant (Người thuê).
 - [ ] Thêm chức năng tìm kiếm nâng cao (lọc theo giá, diện tích, tiện ích).
-- [ ] Triển khai hệ thống thông báo thời gian thực (WebSocket/SSE) cho Master khi có yêu cầu thuê mới.
+- [ ] Triển khai hệ thống thông báo thời gian thực (WebSocket/SSE).
 - [ ] Tích hợp thanh toán trực tuyến (VNPay/Momo).

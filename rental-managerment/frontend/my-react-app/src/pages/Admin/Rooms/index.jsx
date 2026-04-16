@@ -9,6 +9,7 @@ import RoomHeader from "./components/RoomHeader";
 import RoomFilter from "./components/RoomFilter";
 import RoomPagination from "./components/RoomPagination";
 import ImportResultModal from "./components/ImportResultModal";
+import RecentImportModal from "./components/RecentImportModal";
 import ImportRoomModal from "./components/ImportRoomModal";
 import DeleteConfirmModal from "../../../components/Common/DeleteConfirmModal";
 
@@ -19,6 +20,31 @@ import {
     exportAdminRoomsApi,
     importAdminRoomsApi
 } from "../../../api/room.api";
+
+const EXCEL_COLUMN_MAP = {
+    "Họ tên Chủ trọ": "masterName",
+    "SĐT Chủ trọ": "masterPhone",
+    "Email Chủ trọ": "masterEmail",
+    "Địa chỉ Chủ trọ": "masterAddress",
+    "Số phòng": "roomNumber",
+    "Tiêu đề phòng": "title",
+    "Giá thuê (VNĐ)": "price",
+    "Diện tích (m2)": "area",
+    "Sức chứa (người)": "capacity",
+    "Tỉnh/Thành": "city",
+    "Quận/Huyện": "district",
+    "Phường/Xã": "ward",
+    "Địa chỉ chi tiết": "location",
+    "Mô tả": "description",
+    "Tiện ích": "amenities",
+    "Nổi bật": "isTrending",
+    "Trạng thái": "status",
+    "Họ tên người thuê": "tenantName",
+    "SĐT người thuê": "tenantPhone",
+    "Tiền cọc (VNĐ)": "deposit",
+    "Ngày bắt đầu (dd/mm/yyyy)": "startDate",
+    "Ngày kết thúc (dd/mm/yyyy)": "endDate"
+};
 
 export default function Rooms() {
     const [rooms, setRooms] = useState([]);
@@ -34,6 +60,7 @@ export default function Rooms() {
     });
     const [provinces, setProvinces] = useState([]);
     const [districts, setDistricts] = useState([]);
+    const [recentImportedData, setRecentImportedData] = useState([]);
 
     const [isExporting, setIsExporting] = useState(false);
     const [isOpenImportModal, setIsOpenImportModal] = useState(false);
@@ -44,6 +71,7 @@ export default function Rooms() {
     });
     const limitPage = 10;
     const [isImporting, setIsImporting] = useState(false);
+    const [isOpenRecentModal, setIsOpenRecentModal] = useState(false);
 
     const fetchRooms = async (currentPage) => {
         try {
@@ -168,10 +196,6 @@ export default function Rooms() {
                 const worksheet = workbook.Sheets[firstSheetName];
                 const expectedColumnNumber = 22;
 
-                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-                const Headers = json[0].filter(cell => cell !== null && cell !== undefined && cell.toString().trim() !== "")
-                const actualHeaders = Headers.length;
-                // Hàm xử lý ngày tháng từ Excel
                 const formatExcelDate = (value) => {
                     if (!value) return null;
                     let parsedDate;
@@ -201,51 +225,66 @@ export default function Rooms() {
                     return `${day}/${month}/${year}`;
                 };
 
+                const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                const headers = json[0];
+                const columnIndices = {};
+                Object.keys(EXCEL_COLUMN_MAP).forEach(vnHeader => {
+                    const dbKey = EXCEL_COLUMN_MAP[vnHeader];
+                    const index = headers.findIndex(h => h?.toString().trim() === vnHeader);
+                    columnIndices[dbKey] = index; // key là tên cột trong database, value là index của cột trong file excel
+                }); // map dữ liệu từ file excel sang database
+
                 const rows = json.slice(1)
                     .map((r, i) => ({ raw: r, excelRow: i + 1 }))
                     .filter(item => {
                         const r = item.raw;
-                        // Kiểm tra xem ít nhất một trong các cột quan trọng có dữ liệu không
-                        const hasCoreData = [0, 1, 2, 4, 5, 6].some(index => {
-                            const val = r[index];
+                        // Kiểm tra xem hàng có dữ liệu tối thiểu (Số phòng, Tiêu đề, Giá, vv.)
+                        const coreFields = ["roomNumber", "title", "price", "masterName"];
+                        return coreFields.some(field => {
+                            const idx = columnIndices[field];
+                            if (idx === undefined || idx === -1) return false;
+                            const val = r[idx];
                             return val !== null && val !== undefined && val.toString().trim() !== "";
                         });
-                        return hasCoreData;
                     })
                     .map(item => {
                         const r = item.raw;
+                        const getValue = (field) => {
+                            const idx = columnIndices[field];
+                            if (idx === undefined || idx === -1) return undefined;
+                            return r[idx];
+                        };
+
                         return {
                             excelRow: item.excelRow,
-                            masterName: r[0]?.toString().trim(),
-                            masterPhone: r[1]?.toString().trim(),
-                            masterEmail: r[2]?.toString().trim(),
-                            masterAddress: r[3]?.toString().trim(),
-                            roomNumber: r[4]?.toString().trim(),
-                            title: r[5]?.toString().trim(),
-                            price: parseFloat(r[6]),
-                            area: r[7]?.toString().trim(),
-                            capacity: parseInt(r[8]),
-                            city: r[9]?.toString().trim(),
-                            district: r[10]?.toString().trim(),
-                            ward: r[11]?.toString().trim(),
-                            location: r[12]?.toString().trim(),
-                            description: r[13]?.toString().trim(),
-                            amenities: r[14]?.toString().trim(),
-                            isTrending: r[15]?.toString().toLowerCase() === "true" || r[15] === "1" || r[15]?.toString().toLowerCase() === "có",
-                            status: r[16]?.toString().trim() || "Trống",
-                            tenantName: r[17]?.toString().trim() || null,
-                            tenantPhone: r[18]?.toString().trim() || null,
-                            deposit: parseFloat(r[19]) || 0,
-                            startDate: formatExcelDate(r[20]),
-                            endDate: formatExcelDate(r[21])
+                            masterName: getValue("masterName")?.toString().trim(),
+                            masterPhone: getValue("masterPhone")?.toString().trim(),
+                            masterEmail: getValue("masterEmail")?.toString().trim(),
+                            masterAddress: getValue("masterAddress")?.toString().trim(),
+                            roomNumber: getValue("roomNumber")?.toString().trim(),
+                            title: getValue("title")?.toString().trim(),
+                            price: parseFloat(getValue("price")),
+                            area: getValue("area")?.toString().trim(),
+                            capacity: parseInt(getValue("capacity")),
+                            city: getValue("city")?.toString().trim(),
+                            district: getValue("district")?.toString().trim(),
+                            ward: getValue("ward")?.toString().trim(),
+                            location: getValue("location")?.toString().trim(),
+                            description: getValue("description")?.toString().trim(),
+                            amenities: getValue("amenities")?.toString().trim(),
+                            isTrending: getValue("isTrending")?.toString().toLowerCase() === "true" || getValue("isTrending") === "1" || getValue("isTrending")?.toString().toLowerCase() === "có",
+                            status: getValue("status")?.toString().trim() || "Trống",
+                            tenantName: getValue("tenantName")?.toString().trim() || null,
+                            tenantPhone: getValue("tenantPhone")?.toString().trim() || null,
+                            deposit: parseFloat(getValue("deposit")) || 0,
+                            startDate: formatExcelDate(getValue("startDate")),
+                            endDate: formatExcelDate(getValue("endDate"))
                         };
                     });
-
                 if (rows.length === 0) {
                     toast.error("File không có dữ liệu!");
                     return;
                 }
-
                 if (rows.length > 100) {
                     toast.error("Chỉ được nhập tối đa 100 dòng mỗi lần!");
                     return;
@@ -253,14 +292,18 @@ export default function Rooms() {
 
                 // --- VALIDATE FRONTEND TỔNG THỂ ---
                 const validationErrors = [];
-                const seenRoomNumbers = new Set();
-                console.log("so dong cua file : " + actualHeaders)
-                console.log("file format : " + expectedColumnNumber)
-                if (actualHeaders < expectedColumnNumber) {
-                    validationErrors.push("File không đúng format! Hãy tải file mẫu có sẵn");
+                const requiredVNHeaders = [
+                    "SĐT Chủ trọ", "Email Chủ trọ", "Số phòng",
+                    "Tiêu đề phòng", "Giá thuê (VNĐ)", "Diện tích (m2)", "Sức chứa (người)",
+                    "Tỉnh/Thành", "Quận/Huyện", "Phường/Xã", "Địa chỉ chi tiết"
+                ];
 
-                }
-                else {
+                const missingHeaders = requiredVNHeaders.filter(h => !headers.some(cell => cell?.toString().trim() === h));
+
+                if (missingHeaders.length > 0) {
+                    validationErrors.push(`File thiếu các cột bắt buộc: ${missingHeaders.join(", ")}`);
+                } else {
+                    const seenRoomNumbers = new Set();
                     for (const row of rows) {
                         const rowLabel = row.excelRow;
 
@@ -279,7 +322,6 @@ export default function Rooms() {
                             }
                             seenRoomNumbers.add(row.roomNumber);
                         }
-
                     }
                 }
 
@@ -303,6 +345,9 @@ export default function Rooms() {
                         errors: [],
                         successMessage: res.data.message || "Nhập dữ liệu thành công!"
                     });
+                    if (res.data.recentData) {
+                        setRecentImportedData(res.data.recentData);
+                    }
                     fetchRooms(page);
                 } catch (error) {
                     console.error("Lỗi xử lý gọi API Import:", error);
@@ -350,6 +395,8 @@ export default function Rooms() {
                     handleExport={handleExport}
                     setOpenImportModal={setIsOpenImportModal}
                     isExporting={isExporting}
+                    onOpenRecent={() => setIsOpenRecentModal(true)}
+                    hasRecentData={recentImportedData.length > 0}
                 />
 
                 <RoomFilter
@@ -384,7 +431,6 @@ export default function Rooms() {
                 onImport={handleImportExcel}
                 isImporting={isImporting}
             />
-
             <DeleteConfirmModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -397,6 +443,12 @@ export default function Rooms() {
                 onClose={() => setImportResult(prev => ({ ...prev, isOpen: false }))}
                 errors={importResult.errors}
                 successMessage={importResult.successMessage}
+                recentData={recentImportedData}
+            />
+            <RecentImportModal
+                isOpen={isOpenRecentModal}
+                onClose={() => setIsOpenRecentModal(false)}
+                data={recentImportedData}
             />
         </div>
     );

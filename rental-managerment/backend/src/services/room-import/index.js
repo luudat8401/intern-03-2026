@@ -17,11 +17,13 @@ class RoomImportService {
     }
 
     // 2. Bước Storage
-    const count = await storage.saveRows(rows);
+    const result = await storage.saveRows(rows);
+    const { count, savedRows } = result;
 
-    return { 
+    return {
       message: `Thành công! Đã nhập ${count} phòng.`,
-      count 
+      count,
+      recentData: savedRows
     };
   }
 }

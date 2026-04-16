@@ -4,7 +4,7 @@ const yup = require("yup");
 const phoneRegExp = /^(0|84|\+84)[35789][0-9]{8}$/;
 const nameRegExp = /^[\p{L}\s.':\-,()&]+$/u;
 const roomNumberRegExp = /^[a-zA-Z0-9.\-/ \s]+$/;
-const emailRegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const emailRegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]{2,}$/;
 
 const nullTransform = (value, originalValue) => {
   if (originalValue === "N/A" || originalValue === "" || originalValue === null || originalValue === undefined) {
@@ -35,7 +35,7 @@ const parseDateString = (value, originalValue) => {
 
 const importRowSchema = yup.object({
   excelRow: yup.number().required("Số dòng Excel là bắt buộc").integer(),
-  masterName: yup.string().required("Tên chủ trọ là bắt buộc").matches(nameRegExp, "Tên chủ trọ không hợp lệ").trim(),
+  masterName: yup.string().optional().trim(),
   masterPhone: yup.string().required("SĐT chủ trọ là bắt buộc").matches(phoneRegExp, "SĐT chủ trọ không hợp lệ"),
   masterEmail: yup.string().required("Email chủ trọ là bắt buộc").transform(nullTransform).lowercase().matches(emailRegExp, "Email không hợp lệ").trim(),
   masterAddress: yup.string().transform(nullTransform).nullable().trim(),
