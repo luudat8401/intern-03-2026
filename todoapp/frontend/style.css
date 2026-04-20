@@ -1,0 +1,117 @@
+* {
+  margin : 0;
+  padding :0;
+  box-sizing : border-box; /* chuan theo box*/
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;  
+}
+
+body {
+    background-color: rgb(108, 127, 127);
+}
+
+h1,p{
+    color: aliceblue;
+    text-align: center; /* căn chỉnh nội dung ra giữa*/
+    margin-top : 10px;
+}
+
+img{
+    width: 250px;
+    margin: 10px auto;
+    height: 200px;
+    display: block; /* lay full chieu ngang theo block do */
+}
+
+.app-container{
+    display: flex;
+    max-width: 1000px;
+    margin : 30px auto;
+    gap : 30px;
+    padding :0 20px;
+}
+
+aside{
+    width: 250px;
+    background-color: aliceblue;
+    height: fit-content;
+    padding : 20px;
+    border-radius: 12px; /* bo goc */
+}
+aside ul {
+    list-style: none;
+}
+aside li{
+    margin-bottom : 20px;
+}
+
+aside a {
+    color: #333;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+aside a:hover{
+    color: blue;
+}
+
+main section :first-child div{
+    display: flex;
+    flex-direction: column;
+    gap : 15px;
+    background: #fff;
+    padding : 20px;
+    border-radius: 12px;
+    max-width: 500px;
+    margin : 0 auto;
+}
+
+input,textarea{
+    margin :0;
+    padding :10px;
+    width: 100%;
+    border : 1px solid ;
+    border-radius: 12px;
+}
+
+button {
+    background-color: rgb(110, 66, 12);
+    color : white;
+    border : none;
+    padding :10px;
+    border-radius : 12px ;
+    font-weight: bold; /* độ đậm dày mongr của chữ */
+}
+
+button:hover {
+    background-color: rgb(158, 158, 32);
+}
+
+.notes-grid{
+    display : flex ;
+    flex-wrap : wrap ; /*tự động xuống dòng nếu hết chỗ*/
+    gap : 20px ;
+}
+
+.task-card{
+    background : #fff;
+    width: 100%;
+    padding : 20px ;
+    border-radius : 12px ;
+    border : 1px solid #333;
+    min-height: 120px;
+}
+
+.task-card h3{
+    margin-bottom : 10px;
+    font-size : 16px;
+}
+
+.task-card p{
+    margin-bottom : 10px;
+    font-size : 16px;
+    color :black;
+}
+
+.task-card:hover{
+    background-color: aquamarine;
+}
