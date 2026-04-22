@@ -1,15 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head> XIN CHÀO JAVASCRIPT </head>
-<body>  
-    <h1> xin chào javascript nhé </h1>
-    <h2> intro </h2>
-    <button onclick ="alert('Xin chào từ JavaScript!')">Click me</button>
-    <script src="hello.js"></script>
-    <script src="intro.js"></script>
-    <script src="variable.js"></script>
-    <script src="main.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <header>
+            <h1> he thong quan ly phong tro antigravity </h1>
+        </header>
+        <aside>
+            <nav>
+                <ul>
+                    <li><a href="">xin chao </a> </li>
+                    <li><a href=""> them moi </a></li>
+                    <li><a href=""> quan lys </a> </li>
+                    <li><a href=""> kiem tra </a> </li>
+                </ul>
+            </nav>
+        </aside>
+        <main>
+            <section>
+                <h2>Danh sach phong hien co </h2>
+                <article>
+                    <header>
+                        <h3>Phòng 102 </h3>
+                    </header>
+                    <p>Mô tả phòng trọ có : .........</p>
+                    <ul>
+                        <li>gia phong : 10.000.000 VNĐ</li>
+                        <li>dien tich : 30m2</li>
+                    </ul>
+                    <p>Giá thuê như sau <strong>6.500.000</strong></p>
+                </article>
+            </section>
+
+            <hr> <!-- đường kẻ ngang -->
+
+            <section>
+                <h2>Thêm phòng trọ mới</h2>
+                <form>
+                    <div>
+                        <label for="room-id">Mã phòng (Hệ thống tự tạo):</label>
+                        <input type="text" id="room-id" value="ROOM-103" readonly
+                            title="Mã số phòng này do hệ thống tự tạo">
+                    </div>
+                    <div>
+                        <label for="room-name">Tên phòng:</label>
+                        <input type="text" id="room-name" placeholder="Nhập tên phòng..." required>
+                    </div>
+                    <div>
+                        <label for="price">Giá thuê (VNĐ):</label>
+                        <input type="number" id="price" min="0" step="100000">
+                    </div>
+                    <div>
+                        <label for="status">Trạng thái ban đầu:</label>
+                        <select id="status">
+                            <option value="available" selected>Còn trống</option>
+                            <option value="maintenance">Đang sửa chữa</option>
+                            <option value="occupied">Đã có người thuê</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="terms">
+                        <label for="terms">Tôi đồng ý với điều khoản đăng tin</label>
+                    </div>
+                    <div>
+                        <button type="button" disabled>Lưu tạm (Chưa khả dụng)</button>
+                        <button type="submit">Đăng bài ngay</button>
+                    </div>
+                </form>
+            </section>
+
+            <hr>
+
+            <section>
+                <h2>Bảng tổng kết tình trạng phòng</h2>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th>stt</th>
+                            <th>ma phong</th>
+                            <th>gia phong</th>
+                            <th>dien tich</th>
+                            <th>trang thai
+                            <th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <td>1</td>
+                        <td>phong 101</td>
+                        <td>5.000.000</td>
+                        <td>30m2</td>
+                        <td><strong>con trong</strong></td>
+                    </tbody>
+                </table>
+            </section>
+
+            <hr>
+
+            <section>
+                <h3>Anh minh hoa phong thuc te</h3>
+                <img src="https://phongtro123.com/wp-content/uploads/2023/02/phong-tro-quan-binh-thanh-gia-re-1.jpg"
+                    alt="phong tro">
+                <p>Day la phong tro </p>
+            </section>
+        </main>
+        <footer>
+            <p>copyright &copy; 2026</p>
+        </footer>
+    </div>
 </body>
 
 </html>
