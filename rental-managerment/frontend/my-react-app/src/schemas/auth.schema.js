@@ -1,4 +1,6 @@
 import * as yup from 'yup';
+export const phoneRegExp = /^(0|84|\+84)[35789][0-9]{8}$/;
+export const emailRegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z0-9]{2,}$/;
 
 export const loginSchema = yup.object({
   username: yup.
@@ -38,11 +40,11 @@ export const registerSchema = yup.object({
     required('Vui lòng xác nhận mật khẩu').
     oneOf([yup.ref('password'), null], 'Mật khẩu xác nhận không khớp'),
   name: yup.string().required('Họ và tên không được để trống').trim(),
-  email: yup.string().email('Email không hợp lệ').required('Email không được để trống').trim(),
+  email: yup.string().matches(emailRegExp, 'Email không hợp lệ').required('Email không được để trống').trim(),
   phone: yup.
     string().
     required('Số điện thoại không được để trống').
-    matches(/^[0-9]+$/, 'Số điện thoại chỉ bao gồm số').
+    matches(phoneRegExp, 'Số điện thoại không hợp lệ').
     min(10, 'Số điện thoại ít nhất 10 số'),
   role: yup.string().required('Vui lòng chọn vai trò'),
 }).required();

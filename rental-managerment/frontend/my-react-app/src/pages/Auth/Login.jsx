@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { login as loginUser, loginWithGoogle } from "../../service/authService";
 import { useAuth } from "../../context/AuthContext";
-import { GoogleLogin } from '@react-oauth/google';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { loginSchema as schema } from '../../schemas/auth.schema';
@@ -115,13 +114,13 @@ export default function Login() {
               Đăng nhập ngay
             </button>
 
-            <div className="flex items-center gap-4 my-8">
+            {/* <div className="flex items-center gap-4 my-8">
               <div className="h-px bg-slate-800 flex-1"></div>
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Hoặc với</span>
               <div className="h-px bg-slate-800 flex-1"></div>
-            </div>
+            </div> */}
 
-            <div className="flex justify-center">
+            {/* <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => setGeneralError('Lỗi kết nối tới Server của Google.')}
@@ -129,7 +128,7 @@ export default function Login() {
                 shape="rectangular"
                 width="100%"
               />
-            </div>
+            </div> */}
 
             <div className="text-center text-slate-400 font-bold text-xs mt-10 flex flex-col gap-2">
               <span>

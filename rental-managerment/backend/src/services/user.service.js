@@ -117,22 +117,24 @@ class UserService {
     const contractRepo = AppDataSource.getRepository("Contract");
     const roomRepo = AppDataSource.getRepository("Room");
     const userId = parseInt(id);
+    console.log(userId )
 
     const userInfo = await userRepo.findOne({ where: { id: userId } });
     if (userInfo && userInfo.avatar) {
       await this.deleteImageFromCloudinary(userInfo.avatar);
     }
-
+    console.log(userInfo)
     // Xử lý status phòng cho các hợp đồng active trước khi user bị CASCADE
     const activeContracts = await contractRepo.find({
-      where: { userId: userId, status: "active" }
+      where: { userId: userId, status: "2" }
     });
-
+    console.log(activeContracts + "abcs")
     const roomIds = activeContracts.map((c) => c.roomId);
 
     if (roomIds.length > 0) {
       await roomRepo.update({ id: In(roomIds) }, { status: "Trống" });
-    }
+      console.log(`[User Deletion] Đã cập nhật trạng thái phòng cho các hợp đồng active của user ID ${userId}`);
+    } 
 
     const result = await userRepo.delete(userId);
     if (result.affected === 0) throw new Error("Không tìm thấy khách thuê để xóa");

@@ -199,13 +199,19 @@ export default function Rooms() {
                 const formatExcelDate = (value) => {
                     if (!value) return null;
                     let parsedDate;
+                    console.log("dat  start")
+                    console.log(value, typeof value)
+                    console.log("dat end ")
                     switch (typeof value) {
-                        case 'number':
-                            parsedDate = new Date(Math.round((value - 25569) * 86400 * 1000));
-                            break;
+                        
+                        // case 'number':
+                        //     parsedDate = new Date(Math.round((value - 25569) * 86400 * 1000));
+                        //     console.log("dat ddd number")
+                        //     break;
                         case 'string':
                             if (value.includes('/')) {
                                 const [date, month, year] = value.split('/');
+                                console.log("abcs")
                                 return `${date.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
                             }
                             return value;
@@ -214,6 +220,7 @@ export default function Rooms() {
                                 parsedDate = value;
                                 break;
                             }
+                            console.log("abdjafdsacs")
                             return value;
                         default:
                             return value;
