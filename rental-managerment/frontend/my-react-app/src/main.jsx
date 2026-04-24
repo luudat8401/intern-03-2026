@@ -7,7 +7,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AxiosInterceptor } from './components/Guards/AxiosInterceptorSetup'; 
 
-const GOOGLE_CLIENT_ID = "926759738992-1ttl3iq35oac6rkrlirfjj1ffjof1rh1.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
 const theme = createTheme({
   typography: {
