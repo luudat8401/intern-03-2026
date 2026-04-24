@@ -15,6 +15,7 @@ const loginSchema = yup.object({
     .matches(/^\S+$/, "Mật khẩu không được chứa khoảng trắng")
     .min(6, "Mật khẩu ít nhất 6 ký tự")
     .max(50, "Mật khẩu nhiều nhất 50 ký tự"),
+  role: yup.string().oneOf(["admin", "master", "user"]).required("Vui lòng chọn vai trò")
 });
 
 const registerSchema = yup.object({

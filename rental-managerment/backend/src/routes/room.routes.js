@@ -12,7 +12,7 @@ const uploadMem = multer({
     limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-router.get("/", roomController.getAllRooms);
+router.get("/", verifyToken ,roomController.getAllRooms);
 
 // Các route cụ thể cấp 2 phải được đặt TRƯỚC các route có tham số động như :id
 router.get("/admin/all", verifyToken, checkRole(["admin"]), roomController.getAllRoomsForAdmin);

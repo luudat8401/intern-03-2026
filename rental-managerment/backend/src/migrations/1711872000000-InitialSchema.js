@@ -25,7 +25,10 @@ module.exports = class InitialSchema1711872000000 {
       new Table({
         name: "rooms",
         columns: [
-          { name: "id", type: "int", isPrimary: true, isGenerated: true, generationStrategy: "increment" },
+          { name: "id", type: "int", isPrimary: true, isGenerated: true, generationStrategy: "increment" }, 
+          /* isGenerated là tự tình toán và fill thêm vào khi co một bản ghi mới được thêm vào 
+          generationStrategy :"increment" là giá trị gán tự động tăng khi được ghép vào 
+          */
           { name: "room_number", type: "varchar", isUnique: true, isNullable: false },
           { name: "price", type: "float", isNullable: false },
           { name: "status", type: "smallint", default: 0, isNullable: false }, // 0: trống, 1: đã thuê

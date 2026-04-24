@@ -12,6 +12,7 @@ import {
   Masters, Rooms, Users, Contracts, Login, Register, MasterProfile, RoomFormPage, RoomDetailPage, TenantDashboard
 } from "./pages";
 import "./index.css";
+import {AxiosInterceptor} from './components/Guards/AxiosInterceptorSetup'
 
 function App() {
   return (
@@ -24,9 +25,11 @@ function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminLayout />
-            </ProtectedRoute>
+            <AxiosInterceptor>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminLayout />
+              </ProtectedRoute>
+            </AxiosInterceptor>
           }
         >
           <Route index element={<Dashboard />} />
@@ -39,9 +42,11 @@ function App() {
         <Route
           path="/master"
           element={
-            <ProtectedRoute allowedRoles={["master"]}>
-              <MasterLayout />
-            </ProtectedRoute>
+            <AxiosInterceptor>
+              <ProtectedRoute allowedRoles={["master"]}>
+                <MasterLayout />
+              </ProtectedRoute>
+            </AxiosInterceptor>
           }
         >
           <Route index element={<MasterDashboard />} />
@@ -55,9 +60,11 @@ function App() {
         <Route
           path="/user"
           element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <UserLayout />
-            </ProtectedRoute>
+            <AxiosInterceptor>
+              <ProtectedRoute allowedRoles={["user"]}>
+                <UserLayout />
+              </ProtectedRoute>
+            </AxiosInterceptor>
           }
         >
           <Route index element={<TenantDashboard />} />

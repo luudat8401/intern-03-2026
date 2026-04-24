@@ -12,8 +12,8 @@ class AuthController {
 
   async login(req, res) {
     try {
-      const { username, password } = req.body;
-      const result = await authService.login(username, password);
+      const { username, password, role } = req.body;
+      const result = await authService.login(username, password, role);
 
       // Set token to HttpOnly Cookie
       if (result.token) {

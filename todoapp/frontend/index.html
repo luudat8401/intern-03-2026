@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todolist appp</title>
+    <link rel ="icon" href ="logo.ico">
+    <link rel ="stylesheet" href= "style.css">
+</head>
+<body>
+    <h1>todolist app</h1>
+    <img src = "https://yookkan.com/wp-content/uploads/2019/02/todolist-vert.png" width="400px" height="300px" alt="this is a logo"> 
+    <p>this is a todolist app </p>
+    <div class ="app-container">
+        <aside>
+            <nav>
+                <ul>    
+                    <li><a href="">Tất cả các task</a></li>
+                    <li><a href="">Task đã hoàn thành</a></li>
+                    <li><a href ="">Tásk chưa hoàn thành</a></li>
+                </ul>
+            </nav>
+        </aside>
+        <main>
+            <section>
+                <div>
+                    <input type="text" id ="input-name" placeholder ="tên task">
+                    <textarea id="task-detail" placeholder="nội dung task" ></textarea>
+                    <button id="submit-task"> Thêm mới </button>
+                </div>
+            </section>
+            <section class ="task-list">
+                <div class ="notes-grid">
+                    <!-- <div class = "task-card">
+                        <h3>do the laundry</h3>
+                        <p>some thing 1</p>
+                    </div>
+                    <div class ="task-card">
+                        <h3>learning html</h3>
+                        <p> w3school html learning tutorials</p>
+                    </div>
+                    <div class ="task-card">
+                        <h3>learning css</h3>
+                        <p> learing css w3school</p> -->
+                    </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modal-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90;"></div>
+
+    <div class="hidden" id="modal-hidden">
+        <div class="title-change">
+            <h3>Thay đổi thông tin task</h3>
+        </div>
+        <div class="update-title">
+            <input type="hidden" id="update-index"> 
+
+            <label>Tiêu đề :</label>
+            <input type="text" id="update-title-input"> 
+
+            <label>Nội dung :</label>
+            <textarea id="task-detail-update"></textarea>
+        </div>
+        <div class="confirm">
+            <button id="confirm-update">Update</button>
+            <button id="close-edit">Close</button>
+        </div>
+    </div>
+    <script src ='app.js'></script> <!-- html scan từ trên xuống trong thẻ body nên phải đặt script js ở dưới cùng -->
+</body> 
+</html>
+
