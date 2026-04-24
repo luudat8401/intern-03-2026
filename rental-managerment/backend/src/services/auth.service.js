@@ -83,10 +83,10 @@ class AuthService {
       {
         id: account.id,
         role: account.role,
-        profileId: profileId,
+        profileId: profileId, 
       },
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "7d" }
     );
     return authDto.loginResponse(account, token);
   }

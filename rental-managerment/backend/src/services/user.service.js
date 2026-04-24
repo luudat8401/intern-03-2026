@@ -117,14 +117,11 @@ class UserService {
     const contractRepo = AppDataSource.getRepository("Contract");
     const roomRepo = AppDataSource.getRepository("Room");
     const userId = parseInt(id);
-    console.log(userId )
 
     const userInfo = await userRepo.findOne({ where: { id: userId } });
     if (userInfo && userInfo.avatar) {
       await this.deleteImageFromCloudinary(userInfo.avatar);
     }
-    console.log(userInfo)
-    // Xử lý status phòng cho các hợp đồng active trước khi user bị CASCADE
     const activeContracts = await contractRepo.find({
       where: { userId: userId, status: "2" }
     });
