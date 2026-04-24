@@ -5,7 +5,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 const verifyToken = async (req, res, next) => {
     try {
-        console.log("start")
         const token = req.cookies?.token;
         if (!token) {
             return res.status(401).json({ error: "Access Denied. Vui lòng đăng nhập!" });
@@ -24,7 +23,6 @@ const verifyToken = async (req, res, next) => {
             return res.status(401).json({ error: "Tài khoản của bạn không tồn tại hoặc đã bị xóa!" });
         }
         req.user = decoded;
-        console.log("end")
         next();
     } catch (err) {
         return res.status(403).json({ error: "Thẻ (Token) không hợp lệ hoặc đã hết hạn!" });

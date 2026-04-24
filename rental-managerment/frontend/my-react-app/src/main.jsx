@@ -7,7 +7,8 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AxiosInterceptor } from './components/Guards/AxiosInterceptorSetup'; 
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+// Cách gọi đúng trong Vite
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const theme = createTheme({
   typography: {

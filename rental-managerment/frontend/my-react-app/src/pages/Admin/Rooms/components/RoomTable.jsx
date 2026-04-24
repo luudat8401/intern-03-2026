@@ -52,20 +52,23 @@ export default function RoomTable({ rooms, deleteRoom, onEdit }) {
                                 })()}
                             </td>
                             <td className="px-6 py-4">
-                                {room.users && room.users.length > 0 ? (
+                                {room.contracts?.length > 0 ? (
                                     <div className="flex flex-col gap-1">
-                                        {room.users.map((u, idx) => (
-                                            <div key={idx} className="flex items-center gap-1.5 text-gray-900 font-semibold">
-                                                <PeopleIcon className="text-blue-500" style={{ fontSize: '14px' }} />
-                                                {u.name}
-                                            </div>
+                                        {room.contracts.map((contract, idx) => (
+                                            contract.user ? (
+                                                <div key={idx} className="flex items-center gap-1.5 text-gray-900 font-semibold">
+                                                    <PeopleIcon className="text-blue-500" style={{ fontSize: '14px' }} />
+                                                    {contract.user.name}
+                                                </div>
+                                            ) : null
                                         ))}
                                     </div>
                                 ) : (
-                                    <span className="text-gray-400 italic text-xs font-medium uppercase tracking-tight">Chưa bàn giao</span>
+                                    <span className="text-gray-400 italic text-xs font-medium uppercase tracking-tight">
+                                        Chưa bàn giao
+                                    </span>
                                 )}
                             </td>
-
                             <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-2">
                                     <button
