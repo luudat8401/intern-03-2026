@@ -1,36 +1,41 @@
 import * as yup from 'yup';
 
+const phoneRegExp = /^(0|84|\+84)[35789][0-9]{8}$/;
+const nameRegExp = /^[\p{L}\s.':\-,()&]+$/u;
+const emailRegExp = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 export const profileSchema = yup.object({
   name: yup
     .string()
     .required('Họ và tên không được để trống')
     .min(2, 'Họ và tên quá ngắn')
-    .matches(/^[\p{L}\s]+$/u, 'Họ và tên chỉ được chứa chữ cái')
-    .max(20, 'Họ và tên quá dài'),
+    .matches(nameRegExp, 'Họ và tên không hợp lệ')
+    .max(50, 'Họ và tên quá dài'),
   phone: yup
     .string()
     .required('Số điện thoại không được để trống')
-    .matches(/^(0?)(3[2-9]|5[6|8|9]|7[0|6-9]|8[0-6|8|9]|9[0-4|6-9])[0-9]{7}$/, 'Số điện thoại không hợp lệ'),
+    .matches(phoneRegExp, 'Số điện thoại không hợp lệ'),
   email: yup
     .string()
     .required('Email không được để trống')
-    .matches(/^\S+@\S+\.\S+$/, 'Email không hợp lệ'),
+    .matches(emailRegExp, 'Email không hợp lệ'),
   address: yup
     .string()
-    .required('Địa chỉ không được để trống'),
+    .required('Địa chỉ không được để trống')
+    .matches(/^[^<>]*$/, 'Địa chỉ không được chứa các ký tự < hoặc >'),
   bankName: yup
     .string()
-    .matches(/^\p{L}[\p{L}\s]*$/u, 'Tên ngân hàng chỉ được chứa chữ cái')
+    .matches(nameRegExp, 'Tên ngân hàng chỉ được chứa chữ cái')
     .optional()
     .nullable(),
   bankAccountNumber: yup
     .string()
-    .matches(/^[0-9]+$/, 'Số tài khoản không hợp lệ')
+    .matches(/^[0-9]{8,20}$/, 'Số tài khoản phải từ 8-20 chữ số')
     .optional()
     .nullable(),
   bankAccountHolder: yup
     .string()
-    .matches(/^[\p{L}\s]+$/u, 'Tên chủ tài khoản chỉ được chứa chữ cái')
+    .matches(nameRegExp, 'Tên chủ tài khoản không hợp lệ')
     .optional()
     .nullable(),
   bankBranch: yup

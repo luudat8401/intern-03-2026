@@ -36,6 +36,9 @@ export const AuthProvider = ({ children }) => {
       }
     }
   };
+  const logout = ()=>{
+    setUserProfile(null)
+  }
   useEffect(() => {
     const getUiStateCookie = () => {
       const match = document.cookie.match(new RegExp('(^| )ui_state=([^;]+)'));
@@ -85,6 +88,7 @@ export const AuthProvider = ({ children }) => {
       userProfile,
       isInitializing,
       errorCtx,
+      logout,
       loginContext,
       logoutContext,
       updateProfileContext

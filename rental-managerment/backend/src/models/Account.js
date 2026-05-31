@@ -5,18 +5,24 @@ module.exports = new EntitySchema({
   tableName: "accounts",
   columns: {
     id: { primary: true, type: "int", generated: true },
-    username: { type: "varchar", unique: true, nullable: false },
+    username: { type: "varchar", nullable: false },
     password: { type: "varchar", nullable: true },
     googleId: { type: "varchar", unique: true, nullable: true, name: "google_id" },
     email: { type: "varchar", nullable: true },
     avatar: { type: "varchar", nullable: true },
-    role: { type: "varchar", nullable: false }, 
+    role: { type: "varchar", nullable: false },
     status: { type: "varchar", default: "active", nullable: false },
     userId: { type: "int", nullable: true, unique: true, name: "user_id" },
     masterId: { type: "int", nullable: true, unique: true, name: "master_id" },
     createdAt: { type: "timestamp", createDate: true, name: "created_at" },
     updatedAt: { type: "timestamp", createDate: true, name: "updated_at" }
   },
+  uniques: [
+    {
+      name: "UQ_USERNAME_ROLE",
+      columns: ["username", "role"]
+    }
+  ],
   relations: {
     user: {
       target: "User",

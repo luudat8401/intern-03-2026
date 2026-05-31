@@ -272,7 +272,9 @@ class RoomService {
 
     const queryBuilder = roomRepo.createQueryBuilder("room")
       .leftJoinAndSelect("room.master", "master")
-      .leftJoinAndSelect("room.users", "users");
+      .leftJoinAndSelect("room.users", "users")
+      .leftJoinAndSelect("room.contracts", "contracts", "contracts.status = :activeStatus", { activeStatus: 1 })
+      .leftJoinAndSelect("contracts.user", "contractUser");
 
     if (status && status !== 'all') {
       queryBuilder.andWhere("room.status = :status", { status: parseInt(status) });

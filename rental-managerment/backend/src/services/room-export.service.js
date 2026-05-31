@@ -28,31 +28,31 @@ class RoomExportService {
     }
 
     const headers = [
-      { label: "Họ tên Chủ trọ", key: "master_name", width: 20 },
-      { label: "SĐT Chủ trọ", key: "master_phone", width: 15 },
-      { label: "Email Chủ trọ", key: "master_email", width: 25 },
-      { label: "Địa chỉ Chủ trọ", key: "master_address", width: 30 },
-      { label: "Số phòng", key: "room_number", width: 15 },
-      { label: "Tiêu đề", key: "title", width: 30 },
-      { label: "Giá thuê", key: "price", width: 15 },
-      { label: "Diện tích", key: "area", width: 15 },
-      { label: "Sức chứa", key: "capacity", width: 15 },
+      { label: "Họ tên Chủ trọ", key: "masterName", width: 20 },
+      { label: "SĐT Chủ trọ", key: "masterPhone", width: 15 },
+      { label: "Email Chủ trọ", key: "masterEmail", width: 25 },
+      { label: "Địa chỉ Chủ trọ", key: "masterAddress", width: 30 },
+      { label: "Số phòng", key: "roomNumber", width: 15 },
+      { label: "Tiêu đề phòng", key: "title", width: 30 },
+      { label: "Giá thuê (VNĐ)", key: "price", width: 15 },
+      { label: "Diện tích (m2)", key: "area", width: 15 },
+      { label: "Sức chứa (người)", key: "capacity", width: 15 },
       { label: "Tỉnh/Thành", key: "city", width: 20 },
       { label: "Quận/Huyện", key: "district", width: 20 },
       { label: "Phường/Xã", key: "ward", width: 20 },
       { label: "Địa chỉ chi tiết", key: "location", width: 50 },
       { label: "Mô tả", key: "description", width: 40 },
       { label: "Tiện ích", key: "amenities", width: 30 },
-      { label: "Nổi bật", key: "is_trending", width: 10 },
+      { label: "Nổi bật", key: "isTrending", width: 10 },
       { label: "Trạng thái", key: "status", width: 15 },
-      { label: "Họ tên người thuê", key: "tenant_name", width: 20 },
-      { label: "SĐT người thuê", key: "tenant_phone", width: 15 },
-      { label: "Tiền cọc", key: "deposit", width: 15 },
-      { label: "Ngày bắt đầu", key: "start_date", width: 15 },
-      { label: "Ngày kết thúc", key: "end_date", width: 15 },
+      { label: "Họ tên người thuê", key: "tenantName", width: 20 },
+      { label: "SĐT người thuê", key: "tenantPhone", width: 15 },
+      { label: "Tiền cọc (VNĐ)", key: "deposit", width: 15 },
+      { label: "Ngày bắt đầu (dd/mm/yyyy)", key: "startDate", width: 15 },
+      { label: "Ngày kết thúc (dd/mm/yyyy)", key: "endDate", width: 15 },
     ];
 
-    const statusMap = { 0: "Trống", 1: "Đã thuê", 2: "Đang xử lý", 3: "Bảo trì", 4: "Đã xóa" };
+    const statusMap = { 0: "Trống", 1: "Đã Thuê", 2: "Đang xử lý", 3: "Bảo trì", 4: "Đã xóa" };
 
     const { workbook, worksheet } = exportService.createStreamingWorkbook(
       res,
@@ -68,11 +68,11 @@ class RoomExportService {
         try {
           count++;
           const mappedRoom = {
-            master_name: data.master_name || "N/A",
-            master_phone: data.master_phone || "N/A",
-            master_email: data.master_email || "N/A",
-            master_address: data.master_address || "N/A",
-            room_number: data.room_room_number || data.room_roomNumber || "N/A",
+            masterName: data.master_name || "N/A",
+            masterPhone: data.master_phone || "N/A",
+            masterEmail: data.master_email || "N/A",
+            masterAddress: data.master_address || "N/A",
+            roomNumber: data.room_room_number || data.room_roomNumber || "N/A",
             title: data.room_title || "N/A",
             price: data.room_price || 0,
             area: data.room_area || 0,
@@ -84,13 +84,13 @@ class RoomExportService {
             description: data.room_description || "N/A",
             amenities: Array.isArray(data.room_amenities) ? data.room_amenities.join(", ") :
               (typeof data.room_amenities === 'string' ? data.room_amenities : ""),
-            is_trending: data.room_is_trending || data.room_isTrending ? "Có" : "Không",
+            isTrending: data.room_is_trending || data.room_isTrending ? "Có" : "Không",
             status: statusMap[data.room_status] || "N/A",
-            tenant_name: data.tenant_name || "không",
-            tenant_phone: data.tenant_phone || "không",
+            tenantName: data.tenant_name || "không",
+            tenantPhone: data.tenant_phone || "không",
             deposit: data.contracts_deposit || 0,
-            start_date: data.contracts_start_date ? new Date(data.contracts_start_date).toLocaleDateString("vi-VN") : "",
-            end_date: data.contracts_end_date ? new Date(data.contracts_end_date).toLocaleDateString("vi-VN") : "",
+            startDate: data.contracts_start_date ? new Date(data.contracts_start_date).toLocaleDateString("vi-VN") : "",
+            endDate: data.contracts_end_date ? new Date(data.contracts_end_date).toLocaleDateString("vi-VN") : "",
           };
           worksheet.addRow(mappedRoom).commit();
         } catch (err) {

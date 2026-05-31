@@ -5,8 +5,10 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { LoadingProvider } from './context/LoadingContext.jsx'
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AxiosInterceptor } from './components/Guards/AxiosInterceptorSetup'; 
 
-const GOOGLE_CLIENT_ID = "926759738992-1ttl3iq35oac6rkrlirfjj1ffjof1rh1.apps.googleusercontent.com";
+// Cách gọi đúng trong Vite
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 const theme = createTheme({
   typography: {
@@ -19,9 +21,11 @@ createRoot(document.getElementById('root')).render(
     <ThemeProvider theme={theme}>
       <LoadingProvider>
         <AuthProvider>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <App />
-          </GoogleOAuthProvider>
+          {/* <AxiosInterceptor> */}
+            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+              <App />
+            </GoogleOAuthProvider>
+          {/* </AxiosInterceptor> */}
         </AuthProvider>
       </LoadingProvider>
     </ThemeProvider>

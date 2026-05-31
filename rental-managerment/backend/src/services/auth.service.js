@@ -17,9 +17,9 @@ class AuthService {
     const masterRepo = AppDataSource.getRepository("Master");
     const userRepo = AppDataSource.getRepository("User");
 
-    const existingAccount = await accountRepo.findOne({ where: { username } });
+    const existingAccount = await accountRepo.findOne({ where: { username, role } });
     if (existingAccount) {
-      throw new Error("Tên đăng nhập đã tồn tại");
+      throw new Error(`Tên đăng nhập đã tồn tại với vai trò ${role}`);
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -59,13 +59,14 @@ class AuthService {
     return { message: "Đăng ký thành công!" };
   }
 
-  async login(username, password) {
+  async login(username, password, role) {
+    console.log(username, password, role);
     const accountRepo = AppDataSource.getRepository("Account");
     const account = await accountRepo.findOne({
-      where: { username },
+      where: { username, role },
       relations: ["user", "master"]
     });
-
+    console.log(account);
     if (!account) {
       throw new Error("Tài khoản không tồn tại");
     }
@@ -82,10 +83,10 @@ class AuthService {
       {
         id: account.id,
         role: account.role,
-        profileId: profileId,
+        profileId: profileId, 
       },
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "7d" }
     );
     return authDto.loginResponse(account, token);
   }

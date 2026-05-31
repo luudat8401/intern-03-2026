@@ -36,7 +36,8 @@ module.exports = new EntitySchema({
     },
     email: {
       type: "varchar",
-      nullable: true
+      nullable: true,
+      unique: true
     },
     address: {
       type: "varchar",
